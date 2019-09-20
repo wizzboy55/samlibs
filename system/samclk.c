@@ -44,6 +44,14 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 			case (uint32_t)SERCOM5: return BUS_APBC;
 			default: return BUS_UNKNOWN;
 		}
+	#elif defined SAMC20
+		switch(intmodule) {
+			case (uint32_t)SERCOM0: return BUS_APBC;
+			case (uint32_t)SERCOM1: return BUS_APBC;
+			case (uint32_t)SERCOM2: return BUS_APBC;
+			case (uint32_t)SERCOM3: return BUS_APBC;
+			default: return BUS_UNKNOWN;
+		}
 	#else
 		#error "CPU Architecture not supported"
 	#endif
@@ -74,6 +82,14 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 			case (uint32_t)SERCOM3: return PM_APBCMASK_SERCOM3;
 			case (uint32_t)SERCOM4: return PM_APBCMASK_SERCOM4;
 			case (uint32_t)SERCOM5: return PM_APBCMASK_SERCOM5;
+			default: return 0;
+		}
+	#elif defined SAMC20
+		switch(intmodule) {
+			case (uint32_t)SERCOM0: return MCLK_APBCMASK_SERCOM0;
+			case (uint32_t)SERCOM1: return MCLK_APBCMASK_SERCOM1;
+			case (uint32_t)SERCOM2: return MCLK_APBCMASK_SERCOM2;
+			case (uint32_t)SERCOM3: return MCLK_APBCMASK_SERCOM3;
 			default: return 0;
 		}
 	#else
@@ -133,6 +149,26 @@ void samclk_enable_peripheral_clock(const void *const module) {
 			break;
 		}
 		CRITICAL_SECTION_LEAVE();
+	#elif defined SAMC20
+		CRITICAL_SECTION_ENTER();
+		switch(bus) {
+			case BUS_AHB:
+			MCLK->AHBMASK.reg |= peripheral_mask;
+			break;
+			case BUS_APBA:
+			MCLK->APBAMASK.reg |= peripheral_mask;
+			break;
+			case BUS_APBB:
+			MCLK->APBBMASK.reg |= peripheral_mask;
+			break;
+			case BUS_APBC:
+			MCLK->APBCMASK.reg |= peripheral_mask;
+			break;
+			default:
+			DEBUG_printf( ("MCLK ERROR: Unsupported clock bus.\n") );
+			break;
+		}
+		CRITICAL_SECTION_LEAVE();
 	#else
 		#error "CPU Architecture not supported"
 	#endif
@@ -165,6 +201,14 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_CORE;
 		default: return 0;
 	}
+	#elif defined SAMC20
+		switch(intmodule) {
+			case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_CORE;
+			case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_CORE;
+			case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_CORE;
+			case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_CORE;
+			default: return 0;
+		}
 	#else
 	#error "CPU Architecture not supported"
 	#endif
@@ -179,6 +223,14 @@ void samclk_enable_gclk_channel(const void *const module, const uint8_t source) 
 		GCLK->PCHCTRL[channel].reg = (source | GCLK_PCHCTRL_CHEN);
 	#elif defined SAMD20
 		GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(channel) | GCLK_CLKCTRL_GEN(source) | GCLK_CLKCTRL_CLKEN);
+	#elif defined SAMC20
+		if(source < 9) {
+			GCLK->GENCTRL[source].bit.GENEN = 1;
+			if(channel < 41) {
+				GCLK->PCHCTRL[channel].bit.GEN = source;
+				GCLK->PCHCTRL[channel].bit.CHEN = 1;
+			}
+		}
 	#else
 		#error "CPU Architecture not supported"
 	#endif

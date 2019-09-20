@@ -22,6 +22,12 @@
 	#define ResetCause_WDT		PM_RCAUSE_WDT
 	#define ResetCause_BOD12	BOD12
 	#define ResetCause_BOD33	BOD33
+#elif defined(SAMC20)
+	#define RESETCAUSE_Type		RSTC_RCAUSE_Type
+	#define ResetCause			RSTC
+	#define ResetCause_WDT		RSTC_RCAUSE_WDT
+	#define ResetCause_BOD12	BODCORE
+	#define ResetCause_BOD33	BODVDD
 #else
 	#error Specified device not supported.
 #endif
@@ -31,6 +37,8 @@
 	#define WDT_CTRLA			CTRLA
 #elif defined(SAMD20)
 	#define WDT_CTRLA			CTRL
+#elif defined(SAMC20)
+	#define WDT_CTRLA			CTRLA
 #else
 	#error Specified device not supported.
 #endif
