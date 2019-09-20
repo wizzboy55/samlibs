@@ -9,7 +9,9 @@
 
 #include <hpl_pm_base.h>
 #include <hpl_gclk_base.h>
-#include <hri_gclk_e54.h>
+#if defined(SAME54)
+	#include <hri_gclk_e54.h>
+#endif
 
 #include "debug_interface.h"
 
