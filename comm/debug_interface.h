@@ -11,8 +11,6 @@
 
 #include <stdio.h>
 
-#define DEBUG_VERBOSE_LEVEL 3
-
 #if DEBUG_VERBOSE_LEVEL > 0
 #define DEBUG_printf(X)	debug_printf X
 #define DEBUG_verbose(X) debug_verbose X
