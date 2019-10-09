@@ -113,7 +113,6 @@ void vAssertCalled(const char *pcFileName, unsigned long ulLine) {
 
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 {
-#if DEBUG_VERBOSE_LEVEL > 0
 	/* These are volatile to try and prevent the compiler/linker optimizing them
 	away as the variables never actually get used.  If the debugger won't show the
 	values of the variables, make them global my moving their declaration outside
@@ -136,11 +135,20 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 	lr = pulFaultStackAddress[ 5 ];
 	pc = pulFaultStackAddress[ 6 ];
 	psr = pulFaultStackAddress[ 7 ];
-
+#if DEBUG_VERBOSE_LEVEL > 0
 	DEBUG_printf( ("Hard Fault!\n") );
 	DEBUG_printf( ("R0: 0x%08lX\nR1: 0x%08lX\nR2: 0x%08lX\n", r0, r1, r2) );
 	DEBUG_printf( ("R3: 0x%08lX\nR12: 0x%08lX\nLR: 0x%08lX\n", r3, r12, lr) );
 	DEBUG_printf( ("PC: 0x%08lX\nPSR: 0x%08lX\n", pc, psr) );
+#else
+	UNUSED(r0);
+	UNUSED(r1);
+	UNUSED(r2);
+	UNUSED(r3);
+	UNUSED(r12);
+	UNUSED(lr);
+	UNUSED(pc);
+	UNUSED(psr);
 #endif
 	/* When the following line is hit, the variables contain the register values. */
 	#ifdef DEBUG
