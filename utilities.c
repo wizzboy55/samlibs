@@ -14,8 +14,6 @@
 
 #include "debug_interface.h"
 
-#include "sam_ports.h"
-
 RESETCAUSE_Type utils_rcause;
 
 void utils_SaveResetCause(void) {
