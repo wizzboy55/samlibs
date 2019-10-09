@@ -100,7 +100,19 @@ inline void vDmxPortPushNewFrame(DmxPortConfig_t* config) {
 	config->currentRxBuffer->status.valid = 1;
 	config->lastValidRxBuffer = config->currentRxBuffer;
 	config->currentRxBuffer = pDmxPortGetNextBuffer(config);
-	config->cb_newRxFrame(config->lastValidRxBuffer);
+	if(config->cb_newRxFrame != NULL) {
+		config->cb_newRxFrame(config->lastValidRxBuffer);
+	}
+}
+
+inline void vDmxPortPushNewRdmMessage(DmxPortConfig_t* config) {
+	config->currentRxBuffer->status.used = 0;
+	config->currentRxBuffer->status.valid = 1;
+	config->lastValidRxBuffer = config->currentRxBuffer;
+	config->currentRxBuffer = pDmxPortGetNextBuffer(config);
+	if(config->cb_newRdmMessage != NULL) {
+		config->cb_newRdmMessage(config->lastValidRxBuffer);
+	}
 	samgpio_togglePinLevel(DMXDEBUGPIN);
 }
 
@@ -142,12 +154,12 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 					break;
 				case DmxState_StartCode:
 					if(config->currentRxBuffer != NULL) {
-						config->currentRxBuffer->dmx.startcode = data_byte;
+						config->currentRxBuffer->dmx[DMX_STARTCODE_INDEX] = data_byte;
 					}
-					config->currentRxBuffer->slotCount = 0;
-					if(data_byte == DMX_STARTCODE_DMX) {
+					config->currentRxBuffer->slotCount = 1;
+					if(data_byte == DMX_STARTCODE) {
 						config->rxState = DmxState_Slots;
-					} else if(DMX_STARTCODE_RDM) {
+					} else if(RDM_STARTCODE) {
 						config->rxState = DmxState_Rdm;
 					} else {
 						config->rxState = DmxState_Idle;
@@ -155,15 +167,21 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 					break;
 				case DmxState_Slots:
 					if(config->currentRxBuffer != NULL) {
-						config->currentRxBuffer->dmx.slots[config->currentRxBuffer->slotCount++] = data_byte;
-						if(config->currentRxBuffer->slotCount >= DMX_MAX_SLOTS) {
+						config->currentRxBuffer->dmx[config->currentRxBuffer->slotCount++] = data_byte;
+						if(config->currentRxBuffer->slotCount > DMX_MAX_SLOTS) {
 							vDmxPortPushNewFrame(config);
 							config->rxState = DmxState_Idle;
 						}
 					}
 					break;
 				case DmxState_Rdm:
-			
+					if(config->currentRxBuffer != NULL) {
+						config->currentRxBuffer->dmx[config->currentRxBuffer->slotCount++] = data_byte;
+						if(config->currentRxBuffer->slotCount >= config->currentRxBuffer->rdm.messageLength + sizeof(RdmChecksum_t)) {
+							vDmxPortPushNewRdmMessage(config);
+							config->rxState = DmxState_Idle;
+						}
+					}
 					break;
 				default:
 					config->rxState = DmxState_Idle;
@@ -189,12 +207,12 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 				break;
 			case DmxState_StartCode:
 				samgpio_setPinFunction(config->hw.txpin, config->hw.txfunc);
-				config->currentTxSlot = 0;
-				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx.startcode;
+				config->currentTxSlot = 1;
+				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[DMX_STARTCODE_INDEX];
 				config->txState = DmxState_Slots;
 				break;
 			case DmxState_Slots:
-				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx.slots[config->currentTxSlot++];
+				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[config->currentTxSlot++];
 				if(config->currentTxSlot >= config->currentTxBuffer->slotCount) {
 					vDmxEndTransmission(config);
 				}

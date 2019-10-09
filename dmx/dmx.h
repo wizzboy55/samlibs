@@ -16,7 +16,7 @@
 #include "sercom.h"
 
 #define DMX_MAX_SLOTS 512
-#define DMX_STARTCODE_LENGTH 1
+#define DMX_STARTCODE_INDEX 0
 
 #define DMX_BUFFERING 3
 
@@ -25,16 +25,36 @@
 #define DMX_BREAKCOUNT 4
 #define DMX_BREAKBYTE 0x00
 
-#define DMX_STARTCODE_DMX 0x00
-#define DMX_STARTCODE_RDM 0x55
+#define DMX_STARTCODE 0x00
+#define RDM_STARTCODE 0xCC
+
+typedef uint16_t RdmChecksum_t;
+
+typedef union {
+	struct {
+		uint16_t manufacturerID;
+		uint32_t deviceID;
+	};
+	uint8_t raw[sizeof(uint16_t) + sizeof(uint32_t)];
+} RdmUniqueID_t;
 
 typedef struct {
 	union {
-		uint8_t data[DMX_MAX_SLOTS + DMX_STARTCODE_LENGTH];
+		uint8_t dmx[DMX_MAX_SLOTS + sizeof(uint8_t)];
 		struct {
-			uint8_t startcode;
-			uint8_t slots[DMX_MAX_SLOTS];
-		} dmx;
+			uint8_t substartcode;
+			uint8_t messageLength;
+			RdmUniqueID_t destinationUID;
+			RdmUniqueID_t sourceUID;
+			uint8_t transationNumber;
+			union {
+				uint8_t portID;
+				uint8_t responseType;
+			};
+			uint8_t messageCount;
+			uint16_t subDevice;
+			uint8_t message[];
+		} rdm;
 	};
 	uint16_t slotCount;
 	struct {
@@ -67,9 +87,11 @@ typedef struct {
 	DmxBuffer_t* lastValidRxBuffer;
 	DmxBuffer_t* currentTxBuffer;
 	vDmxNewRxFrame cb_newRxFrame;
+	vDmxNewRxFrame cb_newRdmMessage;
 } DmxPortConfig_t;
 
 BaseType_t xDmxInitSercom(DmxPortConfig_t* config);
 void vDmxInterruptHandler(DmxPortConfig_t* config);
+BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame);
 
 #endif /* DMX_H_ */
