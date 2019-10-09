@@ -66,6 +66,20 @@ void samgpio_setPinLevel(const uint32_t gpio, const uint8_t level) {
 	CRITICAL_SECTION_LEAVE()
 }
 
+void samgpio_setPin(const uint32_t gpio) {
+	uint8_t port = GPIO_PORT(gpio);
+	uint8_t pin  = GPIO_PIN(gpio);
+
+	PORT->Group[port].OUTSET.reg = (1<<pin);
+}
+
+void samgpio_clearPin(const uint32_t gpio) {
+	uint8_t port = GPIO_PORT(gpio);
+	uint8_t pin  = GPIO_PIN(gpio);
+
+	PORT->Group[port].OUTCLR.reg = (1<<pin);
+}
+
 void samgpio_togglePinLevel(const uint32_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
