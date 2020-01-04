@@ -19,5 +19,6 @@ void samgpio_setPin(const uint32_t gpio);
 void samgpio_clearPin(const uint32_t gpio);
 void samgpio_togglePinLevel(const uint32_t gpio);
 void samgpio_setPinPullMode(const uint32_t gpio, const enum gpio_pull_mode pull_mode);
+uint8_t samgpio_getPinLevel(const uint32_t gpio);
 
 #endif /* SAMGPIO_H_ */

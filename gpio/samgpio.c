@@ -111,3 +111,15 @@ void samgpio_setPinPullMode(const uint32_t gpio, const enum gpio_pull_mode pull_
 	}
 	CRITICAL_SECTION_LEAVE()
 }
+
+uint8_t samgpio_getPinLevel(const uint32_t gpio) {
+	uint8_t port = GPIO_PORT(gpio);
+	uint8_t pin = GPIO_PIN(gpio);
+	uint32_t pinoffset  = (1<<pin);
+	
+	if(PORT->Group[port].PINCFG[pin].bit.INEN) {
+		return (PORT->Group[port].IN.reg & pinoffset) > 0;
+	} else {
+		return (PORT->Group[port].OUT.reg & pinoffset) > 0;
+	}
+}
