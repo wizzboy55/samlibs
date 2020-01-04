@@ -11,6 +11,7 @@
 
 #include "dmx.h"
 
+#define RDM_TIMEOUTDELAY 3 / portTICK_PERIOD_MS
 #define RDM_MINIMUMFRAMELENGTH 24
 
 RdmChecksum_t uRdmGetChecksum(DmxBuffer_t* buffer);
