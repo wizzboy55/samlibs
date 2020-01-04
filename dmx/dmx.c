@@ -177,7 +177,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 				case DmxState_Rdm:
 					if(config->currentRxBuffer != NULL) {
 						config->currentRxBuffer->dmx[config->currentRxBuffer->slotCount++] = data_byte;
-						if(config->currentRxBuffer->slotCount >= config->currentRxBuffer->rdm.messageLength + sizeof(RdmChecksum_t)) {
+						if(config->currentRxBuffer->slotCount >= config->currentRxBuffer->rdm.messageLength + sizeof(RdmChecksum_t) && config->currentRxBuffer->slotCount >= RDM_MINIMUMFRAMELENGTH) {
 							vDmxPortPushNewRdmMessage(config);
 							config->rxState = DmxState_Idle;
 						}

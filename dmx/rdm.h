@@ -11,6 +11,8 @@
 
 #include "dmx.h"
 
+#define RDM_MINIMUMFRAMELENGTH 24
+
 RdmChecksum_t uRdmGetChecksum(DmxBuffer_t* buffer);
 RdmChecksum_t uRdmComputeChecksum(DmxBuffer_t* buffer);
 
