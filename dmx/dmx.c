@@ -129,6 +129,10 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 		// RX Complete Interrupt
 		uint8_t data_byte = sercomdevice->USART.DATA.reg;
 		
+		if(config->cb_byteReceived != NULL) {
+			config->cb_byteReceived();
+		}
+		
 		if(sercomdevice->USART.STATUS.bit.BUFOVF) {
 			// Overflow
 			// Reset port since data is invalid

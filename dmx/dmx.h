@@ -65,6 +65,7 @@ typedef enum {DmxState_Idle, DmxState_Break, DmxState_Mark, DmxState_StartCode, 
 
 // Callbacks
 typedef void (*vDmxNewRxFrame)(DmxBuffer_t*);
+typedef void (*vDmxEvent)(void);
 
 typedef struct {
 	struct {
@@ -86,6 +87,7 @@ typedef struct {
 	DmxBuffer_t* currentTxBuffer;
 	vDmxNewRxFrame cb_newRxFrame;
 	vDmxNewRxFrame cb_newRdmMessage;
+	vDmxEvent cb_byteReceived;
 } DmxPortConfig_t;
 
 BaseType_t xDmxInitSercom(DmxPortConfig_t* config);
