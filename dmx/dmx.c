@@ -17,8 +17,6 @@
 
 #define DMX_BAUDRATE 250000
 
-#define DMXDEBUGPIN GPIO(GPIO_PORTA, 25)
-
 DmxBuffer_t* pDmxPortGetNextBuffer(DmxPortConfig_t* config) {
 	for(uint8_t i = 0; i < DMX_BUFFERING; i++) {
 		if(config->rxBuffers[i].status.used == 0 && config->rxBuffers[i].status.valid == 0) {
@@ -90,8 +88,6 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	
 	sam_enableModuleInterrupt(sercomdevice);
 	
-	samgpio_setPinDirection(DMXDEBUGPIN, GPIO_DIRECTION_OUT);
-	
 	return pdPASS;
 }
 
@@ -113,7 +109,6 @@ inline void vDmxPortPushNewRdmMessage(DmxPortConfig_t* config) {
 	if(config->cb_newRdmMessage != NULL) {
 		config->cb_newRdmMessage(config->lastValidRxBuffer);
 	}
-	samgpio_togglePinLevel(DMXDEBUGPIN);
 }
 
 void vDmxEndTransmission(DmxPortConfig_t* config) {
