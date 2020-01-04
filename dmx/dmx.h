@@ -93,5 +93,6 @@ typedef struct {
 BaseType_t xDmxInitSercom(DmxPortConfig_t* config);
 void vDmxInterruptHandler(DmxPortConfig_t* config);
 BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame);
+void vDmxSwapRxTxPins(DmxPortConfig_t* config, BaseType_t swap);
 
 #endif /* DMX_H_ */

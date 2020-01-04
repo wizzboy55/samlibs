@@ -12,6 +12,7 @@
 #include "samgpio.h"
 #include "saminterrupt.h"
 #include "utilities.h"
+#include "rdm.h"
 
 #include <string.h>
 
@@ -28,6 +29,30 @@ DmxBuffer_t* pDmxPortGetNextBuffer(DmxPortConfig_t* config) {
 	}
 	
 	return NULL;
+}
+
+void vDmxSetupPins(Sercom* sercomdevice, enum SercomPads_e rxpad, uint32_t rxfunc, uint32_t rxpin, enum SercomPads_e txpad, uint32_t txfunc, uint32_t txpin) {
+	if(sercomdevice->USART.CTRLA.bit.ENABLE) {
+		return;	
+	}
+	
+	if(rxfunc != 0) {
+		int8_t rxbit = xSercomPadToRXPO(rxpad);
+		if(rxbit >= 0) {
+			sercomdevice->USART.CTRLA.bit.RXPO = (uint8_t)rxbit;
+			samgpio_setPinFunction(rxpin, rxfunc);
+			sercomdevice->USART.CTRLB.bit.RXEN = 1;
+		}
+	}
+	
+	if(txfunc != 0) {
+		int8_t txbit = xSercomPadToTXPO(txpad);
+		if(txbit >= 0) {
+			sercomdevice->USART.CTRLA.bit.TXPO = (uint8_t)txbit;
+			samgpio_setPinFunction(txpin, txfunc);
+			sercomdevice->USART.CTRLB.bit.TXEN = 1;
+		}
+	}
 }
 
 BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
@@ -48,8 +73,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	
 	sercomdevice->USART.CTRLA.bit.DORD = 1;
 	sercomdevice->USART.CTRLA.bit.FORM = 0;
-	sercomdevice->USART.CTRLA.bit.RXPO = xSercomPadToRXPO(config->hw.rxpad);
-	sercomdevice->USART.CTRLA.bit.TXPO = xSercomPadToTXPO(config->hw.txpad);
+	
 	sercomdevice->USART.CTRLA.bit.SAMPR = 0;
 	sercomdevice->USART.CTRLA.bit.SAMPA = 0x03;
 	sercomdevice->USART.CTRLA.bit.MODE = 0x01;
@@ -58,17 +82,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	sercomdevice->USART.CTRLB.bit.SBMODE = 0;	// One Stop Bit, to prevent framing error with devices sending short stop bits;
 	sercomdevice->USART.CTRLB.bit.CHSIZE = 0;	// 8-bit Data
 	
-	if(config->hw.rxfunc != 0) {
-		samgpio_setPinFunction(config->hw.rxpin, config->hw.rxfunc);
-		sercomdevice->USART.CTRLB.bit.RXEN = 1;
-	}
-	
-	if(config->hw.txfunc != 0) {
-		samgpio_setPinDirection(config->hw.txpin, GPIO_DIRECTION_OUT);
-		samgpio_setPinLevel(config->hw.txpin, 0);
-		samgpio_setPinFunction(config->hw.txpin, config->hw.txfunc);
-		sercomdevice->USART.CTRLB.bit.TXEN = 1;
-	}
+	vDmxSetupPins(sercomdevice, config->hw.rxpad, config->hw.rxfunc, config->hw.rxpin, config->hw.txpad, config->hw.txfunc, config->hw.txpin);
 	
 	sercomdevice->USART.INTFLAG.reg = 0x00;
 	sercomdevice->USART.INTENCLR.reg = 0xFF;
@@ -243,4 +257,25 @@ BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame) {
 	sercomdevice->USART.INTENSET.bit.TXC = 1;
 	
 	return pdPASS;
+}
+
+void vDmxSwapRxTxPins(DmxPortConfig_t* config, BaseType_t swap) {
+	if(config->hw.module == NULL) {
+		return;
+	}
+	
+	Sercom* sercomdevice = (Sercom *)config->hw.module;
+	
+	sercomdevice->USART.CTRLA.bit.ENABLE = 0;
+	
+	sercomdevice->USART.CTRLB.bit.RXEN = 0;
+	sercomdevice->USART.CTRLB.bit.TXEN = 0;
+	
+	if(swap == pdTRUE) {
+		vDmxSetupPins(sercomdevice, config->hw.txpad, config->hw.txfunc, config->hw.txpin, config->hw.rxpad, config->hw.rxfunc, config->hw.rxpin);
+	} else {
+		vDmxSetupPins(sercomdevice, config->hw.rxpad, config->hw.rxfunc, config->hw.rxpin, config->hw.txpad, config->hw.txfunc, config->hw.txpin);
+	}
+	
+	sercomdevice->USART.CTRLA.bit.ENABLE = 1;
 }
