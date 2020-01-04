@@ -10,7 +10,7 @@
 RdmChecksum_t uRdmGetChecksum(DmxBuffer_t* buffer) {
 	RdmChecksum_t checksum;
 	
-	checksum = buffer->rdm.message[buffer->rdm.messageLength] << 8 | buffer->rdm.message[buffer->rdm.messageLength + 1];
+	checksum = (buffer->rdm.message[buffer->rdm.messageLength] << 8) | buffer->rdm.message[buffer->rdm.messageLength + 1];
 	
 	return checksum;
 }
