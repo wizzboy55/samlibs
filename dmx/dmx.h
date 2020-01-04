@@ -30,18 +30,16 @@
 
 typedef uint16_t RdmChecksum_t;
 
-typedef union {
-	struct {
-		uint16_t manufacturerID;
-		uint32_t deviceID;
-	};
-	uint8_t raw[sizeof(uint16_t) + sizeof(uint32_t)];
-} RdmUniqueID_t;
+typedef struct {
+	uint16_t manufacturerID;
+	uint32_t deviceID;
+} __attribute__((packed, aligned(1))) RdmUniqueID_t;
 
 typedef struct {
 	union {
 		uint8_t dmx[DMX_MAX_SLOTS + sizeof(uint8_t)];
 		struct {
+			uint8_t startcode;
 			uint8_t substartcode;
 			uint8_t messageLength;
 			RdmUniqueID_t destinationUID;
@@ -54,7 +52,7 @@ typedef struct {
 			uint8_t messageCount;
 			uint16_t subDevice;
 			uint8_t message[];
-		} rdm;
+		} __attribute__((packed, aligned(1))) rdm;
 	};
 	uint16_t slotCount;
 	struct {
