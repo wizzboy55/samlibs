@@ -77,7 +77,7 @@ void vSAMx5xInitializeBuffers(NetworkBufferDescriptor_t pxNetworkReceiveBuffers[
 		ethTransmitBuffers[i].address = (uint32_t *)&(ucEthTxBuffers[i][0]);
 
 		if(i == (ipconfigNUM_NETWORK_BUFFER_DESCRIPTORS - 1)) {
-			ethTransmitBuffers[i].Word1.Wrap = 1;
+			ethTransmitBuffers[i].Word1.bit.Wrap = 1;
 		}
 	}
 }
