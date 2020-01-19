@@ -11,36 +11,36 @@ IRQn_Type sam_getModuleInterrupt(void* const module) {
 	uint32_t addr = (uint32_t)module;
 	#ifdef SAME5x
 		switch(addr) {
-			case SERCOM0:
+			case (uint32_t)SERCOM0:
 				return SERCOM0_IRQn;
-			case SERCOM1:
+			case (uint32_t)SERCOM1:
 				return SERCOM1_IRQn;
-			case SERCOM2:
+			case (uint32_t)SERCOM2:
 				return SERCOM2_IRQn;
-			case SERCOM3:
+			case (uint32_t)SERCOM3:
 				return SERCOM3_IRQn;
-			case SERCOM4:
+			case (uint32_t)SERCOM4:
 				return SERCOM4_IRQn;
-			case SERCOM5:
+			case (uint32_t)SERCOM5:
 				return SERCOM5_IRQn;
-			case SERCOM6:
+			case (uint32_t)SERCOM6:
 				return SERCOM6_IRQn;
-			case SERCOM7:
+			case (uint32_t)SERCOM7:
 				return SERCOM7_IRQn;
 		}
 	#elif defined SAMD20
 		switch(addr) {
-			case SERCOM0:
+			case (uint32_t)SERCOM0:
 				return SERCOM0_IRQn;
-			case SERCOM1:
+			case (uint32_t)SERCOM1:
 				return SERCOM1_IRQn;
-			case SERCOM2:
+			case (uint32_t)SERCOM2:
 				return SERCOM2_IRQn;
-			case SERCOM3:
+			case (uint32_t)SERCOM3:
 				return SERCOM3_IRQn;
-			case SERCOM4:
+			case (uint32_t)SERCOM4:
 				return SERCOM4_IRQn;
-			case SERCOM5:
+			case (uint32_t)SERCOM5:
 				return SERCOM5_IRQn;
 		}
 	#elif defined SAMC20
