@@ -18,13 +18,10 @@
 #include <peripheral_clk_config.h>
 
 #include "samclk.h"
-
-#define DEBUG_SERCOM SERCOM2
-#define DEBUG_SERCOM_CLK SERCOM2_GCLK_ID_CORE
+#include "samgpio.h"
+#include "HardwareDescriptor.h"
 
 #define DEBUG_SERCOM_BAUDRATE 115200
-
-#define DEBUG_UART 1
 
 #define DEBUG_BUFSIZE 128
 char buf[DEBUG_BUFSIZE];
@@ -79,30 +76,31 @@ void debug_putstring(const char *str) {
 
 void debug_init(void) {
 
-	if(DEBUG_SERCOM->USART.CTRLA.bit.MODE == SERCOM_USART_CTRLA_MODE(0x01)) {
-		return;
-	}
+	#if DEBUG_UART == 1
+		if(DEBUG_SERCOM->USART.CTRLA.bit.MODE == SERCOM_USART_CTRLA_MODE(0x01)) {
+			return;
+		}
 
-	samclk_enable_peripheral_clock(DEBUG_SERCOM);
-	samclk_enable_gclk_channel(DEBUG_SERCOM, 0);
+		samclk_enable_peripheral_clock(DEBUG_SERCOM);
+		samclk_enable_gclk_channel(DEBUG_SERCOM, 0);
 
-	DEBUG_SERCOM->USART.CTRLA.reg = SERCOM_USART_CTRLA_SWRST;
+		DEBUG_SERCOM->USART.CTRLA.reg = SERCOM_USART_CTRLA_SWRST;
 
-	// Wait while reset is in effect
-	while(DEBUG_SERCOM->USART.CTRLA.bit.SWRST) {
+		// Wait while reset is in effect
+		while(DEBUG_SERCOM->USART.CTRLA.bit.SWRST) {
 
-	}
+		}
 
-	DEBUG_SERCOM->USART.CTRLB.reg = SERCOM_USART_CTRLB_TXEN;
+		DEBUG_SERCOM->USART.CTRLB.reg = SERCOM_USART_CTRLB_TXEN;
 
-	DEBUG_SERCOM->USART.BAUD.reg = 65536 - ((65536 * 16.0f * DEBUG_SERCOM_BAUDRATE) / CONF_CPU_FREQUENCY);
+		DEBUG_SERCOM->USART.BAUD.reg = 65536 - ((65536 * 16.0f * DEBUG_SERCOM_BAUDRATE) / CONF_CPU_FREQUENCY);
 
-	DEBUG_SERCOM->USART.INTENCLR.reg = 0xFF;
+		DEBUG_SERCOM->USART.INTENCLR.reg = 0xFF;
 
-	DEBUG_SERCOM->USART.INTENSET.bit.DRE = 1;
+		DEBUG_SERCOM->USART.INTENSET.bit.DRE = 1;
 
-	DEBUG_SERCOM->USART.CTRLA.reg = SERCOM_USART_CTRLA_MODE(0x01) | SERCOM_USART_CTRLA_RXPO(0x01) | SERCOM_USART_CTRLA_ENABLE | SERCOM_USART_CTRLA_DORD;
+		DEBUG_SERCOM->USART.CTRLA.reg = SERCOM_USART_CTRLA_MODE(0x01) | SERCOM_USART_CTRLA_RXPO(0x01) | SERCOM_USART_CTRLA_ENABLE | SERCOM_USART_CTRLA_DORD;
 
-	gpio_set_pin_function(GPIO(GPIO_PORTB, 25), PINMUX_PB25D_SERCOM2_PAD0);
-	
+		samgpio_setPinFunction(DEBUG_TX_GPIO, DEBUG_TX_PINMUX);
+	#endif
 }
