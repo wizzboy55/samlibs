@@ -21,7 +21,7 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#ifdef SAME5x
+	#if defined(SAME54)
 		switch(intmodule) {
 			case (uint32_t)SERCOM0: return BUS_APBA;
 			case (uint32_t)SERCOM1: return BUS_APBA;
@@ -31,6 +31,17 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 			case (uint32_t)SERCOM5: return BUS_APBD;
 			case (uint32_t)SERCOM6: return BUS_APBD;
 			case (uint32_t)SERCOM7: return BUS_APBD;
+			case (uint32_t)GMAC: return BUS_APBC;
+			default: return BUS_UNKNOWN;
+		}
+	#elif defined SAME53
+		switch(intmodule) {
+			case (uint32_t)SERCOM0: return BUS_APBA;
+			case (uint32_t)SERCOM1: return BUS_APBA;
+			case (uint32_t)SERCOM2: return BUS_APBB;
+			case (uint32_t)SERCOM3: return BUS_APBB;
+			case (uint32_t)SERCOM4: return BUS_APBD;
+			case (uint32_t)SERCOM5: return BUS_APBD;
 			case (uint32_t)GMAC: return BUS_APBC;
 			default: return BUS_UNKNOWN;
 		}
@@ -61,7 +72,7 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#ifdef SAME5x
+	#ifdef SAME54
 		switch(intmodule) {
 			case (uint32_t)SERCOM0: return MCLK_APBAMASK_SERCOM0;
 			case (uint32_t)SERCOM1: return MCLK_APBAMASK_SERCOM1;
@@ -71,6 +82,17 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 			case (uint32_t)SERCOM5: return MCLK_APBDMASK_SERCOM5;
 			case (uint32_t)SERCOM6: return MCLK_APBDMASK_SERCOM6;
 			case (uint32_t)SERCOM7: return MCLK_APBDMASK_SERCOM7;
+			case (uint32_t)GMAC:	return MCLK_APBCMASK_GMAC;
+			default: return 0;
+		}
+	#elif defined SAME53
+		switch(intmodule) {
+			case (uint32_t)SERCOM0: return MCLK_APBAMASK_SERCOM0;
+			case (uint32_t)SERCOM1: return MCLK_APBAMASK_SERCOM1;
+			case (uint32_t)SERCOM2: return MCLK_APBBMASK_SERCOM2;
+			case (uint32_t)SERCOM3: return MCLK_APBBMASK_SERCOM3;
+			case (uint32_t)SERCOM4: return MCLK_APBDMASK_SERCOM4;
+			case (uint32_t)SERCOM5: return MCLK_APBDMASK_SERCOM5;
 			case (uint32_t)GMAC:	return MCLK_APBCMASK_GMAC;
 			default: return 0;
 		}
@@ -106,7 +128,7 @@ void samclk_enable_peripheral_clock(const void *const module) {
 		DEBUG_printf( ("MCLK ERROR: Unsupported peripheral.\n") );
 	}
 
-	#ifdef SAME5x
+	#if defined(SAME54) || defined(SAME53)
 		CRITICAL_SECTION_ENTER();
 		switch(bus) {
 			case BUS_AHB:
@@ -191,6 +213,17 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
 		default: return 0;
 	}
+	#elif defined SAME53
+	switch(intmodule) {
+		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_CORE;
+		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_CORE;
+		case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_CORE;
+		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_CORE;
+		case (uint32_t)SERCOM4: return SERCOM4_GCLK_ID_CORE;
+		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_CORE;
+		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
+		default: return 0;
+	}
 	#elif defined SAMD20
 	switch(intmodule) {
 		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_CORE;
@@ -219,7 +252,7 @@ void samclk_enable_gclk_channel(const void *const module, const uint8_t source) 
 	uint8_t channel = samclk_get_peripheral_clockid(module);
 
 	CRITICAL_SECTION_ENTER();
-	#ifdef SAME5x
+	#if defined(SAME54) || defined(SAME53)
 		GCLK->PCHCTRL[channel].reg = (source | GCLK_PCHCTRL_CHEN);
 	#elif defined SAMD20
 		GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(channel) | GCLK_CLKCTRL_GEN(source) | GCLK_CLKCTRL_CLKEN);

@@ -325,15 +325,11 @@ void vSAMx5xMAC_ResetPHY(void) {
 
 BaseType_t xSAMx5xMAC_HardwareInit(SAMx5xMAC_HwConfig_t* pMacConfig) {
 
-	#ifndef SAME5x
-		#error "MCU Family not supported."
-	#endif
-
 	// MDIO
 	samgpio_setPinFunction(pMacConfig->gpio_mdio_sda, pMacConfig->pinmux_mdio_sda);
 	samgpio_setPinFunction(pMacConfig->gpio_mdc_scl, pMacConfig->pinmux_mdc_scl);
 
-	#ifdef SAME5x
+	#ifdef SAME54
 	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), PINMUX_PA12L_GMAC_GRX1);
 	samgpio_setPinFunction(GPIO(GPIO_PORTA, 13), PINMUX_PA13L_GMAC_GRX0);
 	samgpio_setPinFunction(GPIO(GPIO_PORTA, 14), PINMUX_PA14L_GMAC_GTXCK);
@@ -354,7 +350,18 @@ BaseType_t xSAMx5xMAC_HardwareInit(SAMx5xMAC_HwConfig_t* pMacConfig) {
 		samgpio_setPinFunction(GPIO(GPIO_PORTC, 21), PINMUX_PC21L_GMAC_GCOL);
 		GMAC->UR.reg = 1; // MII
 	}
+	#elif defined SAME53
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), PINMUX_PA12L_GMAC_GRX1);
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 13), PINMUX_PA13L_GMAC_GRX0);
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 14), PINMUX_PA14L_GMAC_GTXCK);
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 15), PINMUX_PA15L_GMAC_GRXER);
+	samgpio_setPinFunction(pMacConfig->gpio_crsdv, pMacConfig->pinumx_crsdv);
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 17), PINMUX_PA17L_GMAC_GTXEN);
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 18), PINMUX_PA18L_GMAC_GTX0);
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 19), PINMUX_PA19L_GMAC_GTX1);
+	GMAC->UR.reg = 0; // RMII
 	#else
+	#error "MCU Family not supported."
 	return pdFAIL;
 	#endif
 
