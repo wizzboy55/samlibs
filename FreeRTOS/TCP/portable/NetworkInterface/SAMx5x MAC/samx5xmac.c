@@ -330,8 +330,8 @@ BaseType_t xSAMx5xMAC_HardwareInit(SAMx5xMAC_HwConfig_t* pMacConfig) {
 	#endif
 
 	// MDIO
-	samgpio_setPinFunction(pMacConfig->gpio_mdio, pMacConfig->pinmux_mdio);
-	samgpio_setPinFunction(pMacConfig->gpio_mdc, pMacConfig->pinmux_mdc);
+	samgpio_setPinFunction(pMacConfig->gpio_mdio_sda, pMacConfig->pinmux_mdio_sda);
+	samgpio_setPinFunction(pMacConfig->gpio_mdc_scl, pMacConfig->pinmux_mdc_scl);
 
 	#ifdef SAME5x
 	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), PINMUX_PA12L_GMAC_GRX1);
