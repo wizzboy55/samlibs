@@ -283,6 +283,57 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 	#endif
 }
 
+uint8_t samclk_get_peripheral_slowclockid(const void *const module) {
+	
+	uint32_t intmodule = (uint32_t)module;
+	
+	#ifdef SAME5x
+	switch(intmodule) {
+		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM4: return SERCOM4_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM6: return SERCOM6_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM7: return SERCOM7_GCLK_ID_SLOW;
+		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
+		default: return 0;
+	}
+	#elif defined SAME53
+	switch(intmodule) {
+		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM4: return SERCOM4_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_SLOW;
+		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
+		default: return 0;
+	}
+	#elif defined SAMD20
+	switch(intmodule) {
+		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM4: return SERCOM4_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_SLOW;
+		default: return 0;
+	}
+	#elif defined SAMC20
+	switch(intmodule) {
+		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_SLOW;
+		default: return 0;
+	}
+	#else
+	#error "CPU Architecture not supported"
+	#endif
+}
+
 void samclk_enable_gclk_channel(const void *const module, const uint8_t source) {
 
 	uint8_t channel = samclk_get_peripheral_clockid(module);
@@ -298,6 +349,28 @@ void samclk_enable_gclk_channel(const void *const module, const uint8_t source) 
 			if(channel < 41) {
 				GCLK->PCHCTRL[channel].bit.GEN = source;
 				GCLK->PCHCTRL[channel].bit.CHEN = 1;
+			}
+		}
+	#else
+		#error "CPU Architecture not supported"
+	#endif
+	CRITICAL_SECTION_LEAVE();
+}
+
+void samclk_enable_glck_slow_channel(const void *const module, const uint8_t slow_source) {
+	uint8_t slowchannel = samclk_get_peripheral_slowclockid(module);
+	
+	CRITICAL_SECTION_ENTER();
+	#if defined(SAME54) || defined(SAME53)
+		GCLK->PCHCTRL[slowchannel].reg = (slow_source | GCLK_PCHCTRL_CHEN);
+	#elif defined SAMD20
+		GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(slowchannel) | GCLK_CLKCTRL_GEN(slow_source) | GCLK_CLKCTRL_CLKEN);
+	#elif defined SAMC20
+		if(slow_source < 9) {
+			GCLK->GENCTRL[slow_source].bit.GENEN = 1;
+			if(slowchannel < 41) {
+				GCLK->PCHCTRL[slowchannel].bit.GEN = slow_source;
+				GCLK->PCHCTRL[slowchannel].bit.CHEN = 1;
 			}
 		}
 	#else
