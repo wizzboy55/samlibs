@@ -38,6 +38,7 @@ void samgpio_setPinDirection(const uint32_t gpio, const enum gpio_direction dire
 		case GPIO_DIRECTION_OFF:
 			PORT->Group[port].DIRCLR.reg = (1 << pin);
 			PORT->Group[port].PINCFG[pin].bit.INEN = 0;
+			PORT->Group[port].PINCFG[pin].bit.PULLEN = 0;
 			break;
 		case GPIO_DIRECTION_IN:
 			PORT->Group[port].DIRCLR.reg = (1 << pin);
