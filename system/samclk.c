@@ -21,7 +21,7 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#if defined(SAME54)
+	#if defined(SAME54) || defined(SAME53)
 		switch(intmodule) {
 			case (uint32_t)SERCOM0: return BUS_APBA;
 			case (uint32_t)SERCOM1: return BUS_APBA;
@@ -29,20 +29,32 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 			case (uint32_t)SERCOM3: return BUS_APBB;
 			case (uint32_t)SERCOM4: return BUS_APBD;
 			case (uint32_t)SERCOM5: return BUS_APBD;
+		#ifdef SERCOM6
 			case (uint32_t)SERCOM6: return BUS_APBD;
+		#endif
+		#ifdef SERCOM7
 			case (uint32_t)SERCOM7: return BUS_APBD;
+		#endif
 			case (uint32_t)GMAC: return BUS_APBC;
-			default: return BUS_UNKNOWN;
-		}
-	#elif defined SAME53
-		switch(intmodule) {
-			case (uint32_t)SERCOM0: return BUS_APBA;
-			case (uint32_t)SERCOM1: return BUS_APBA;
-			case (uint32_t)SERCOM2: return BUS_APBB;
-			case (uint32_t)SERCOM3: return BUS_APBB;
-			case (uint32_t)SERCOM4: return BUS_APBD;
-			case (uint32_t)SERCOM5: return BUS_APBD;
-			case (uint32_t)GMAC: return BUS_APBC;
+			case (uint32_t)TC0: return BUS_APBA;
+			case (uint32_t)TC1: return BUS_APBA;
+			case (uint32_t)TC2: return BUS_APBB;
+			case (uint32_t)TC3: return BUS_APBB;
+			case (uint32_t)TC4: return BUS_APBC;
+			case (uint32_t)TC5: return BUS_APBC;
+		#ifdef TC6
+			case (uint32_t)TC6: return BUS_APBD;
+		#endif
+		#ifdef TC7
+			case (uint32_t)TC7: return BUS_APBD;
+		#endif
+			case (uint32_t)TCC0: return BUS_APBB;
+			case (uint32_t)TCC1: return BUS_APBB;
+			case (uint32_t)TCC2: return BUS_APBC;
+			case (uint32_t)TCC3: return BUS_APBC;
+			case (uint32_t)TCC4: return BUS_APBD;
+			case (uint32_t)EIC:	 return BUS_APBA;
+			case (uint32_t)DAC:	 return BUS_APBD;
 			default: return BUS_UNKNOWN;
 		}
 	#elif defined SAMD20
@@ -72,7 +84,7 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#ifdef SAME54
+	#if defined(SAME54) || defined(SAME53)
 		switch(intmodule) {
 			case (uint32_t)SERCOM0: return MCLK_APBAMASK_SERCOM0;
 			case (uint32_t)SERCOM1: return MCLK_APBAMASK_SERCOM1;
@@ -80,20 +92,32 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 			case (uint32_t)SERCOM3: return MCLK_APBBMASK_SERCOM3;
 			case (uint32_t)SERCOM4: return MCLK_APBDMASK_SERCOM4;
 			case (uint32_t)SERCOM5: return MCLK_APBDMASK_SERCOM5;
+		#ifdef SERCOM6
 			case (uint32_t)SERCOM6: return MCLK_APBDMASK_SERCOM6;
+		#endif
+		#ifdef SERCOM7
 			case (uint32_t)SERCOM7: return MCLK_APBDMASK_SERCOM7;
+		#endif
 			case (uint32_t)GMAC:	return MCLK_APBCMASK_GMAC;
-			default: return 0;
-		}
-	#elif defined SAME53
-		switch(intmodule) {
-			case (uint32_t)SERCOM0: return MCLK_APBAMASK_SERCOM0;
-			case (uint32_t)SERCOM1: return MCLK_APBAMASK_SERCOM1;
-			case (uint32_t)SERCOM2: return MCLK_APBBMASK_SERCOM2;
-			case (uint32_t)SERCOM3: return MCLK_APBBMASK_SERCOM3;
-			case (uint32_t)SERCOM4: return MCLK_APBDMASK_SERCOM4;
-			case (uint32_t)SERCOM5: return MCLK_APBDMASK_SERCOM5;
-			case (uint32_t)GMAC:	return MCLK_APBCMASK_GMAC;
+			case (uint32_t)TC0:		return MCLK_APBAMASK_TC0;
+			case (uint32_t)TC1:		return MCLK_APBAMASK_TC1;
+			case (uint32_t)TC2:		return MCLK_APBBMASK_TC2;
+			case (uint32_t)TC3:		return MCLK_APBBMASK_TC3;
+			case (uint32_t)TC4:		return MCLK_APBCMASK_TC4;
+			case (uint32_t)TC5:		return MCLK_APBCMASK_TC5;
+		#ifdef TC6
+			case (uint32_t)TC6:		return MCLK_APBDMASK_TC6;
+		#endif
+		#ifdef TC7
+			case (uint32_t)TC7:		return MCLK_APBDMASK_TC7;
+		#endif
+			case (uint32_t)TCC0:	return MCLK_APBBMASK_TCC0;
+			case (uint32_t)TCC1:	return MCLK_APBBMASK_TCC1;
+			case (uint32_t)TCC2:	return MCLK_APBCMASK_TCC2;
+			case (uint32_t)TCC3:	return MCLK_APBCMASK_TCC3;
+			case (uint32_t)TCC4:	return MCLK_APBDMASK_TCC4;
+			case (uint32_t)EIC:		return MCLK_APBAMASK_EIC;
+			case (uint32_t)DAC:		return MCLK_APBDMASK_DAC;
 			default: return 0;
 		}
 	#elif defined SAMD20
@@ -200,7 +224,7 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#ifdef SAME5x
+	#if defined(SAME54) || defined(SAME53)
 	switch(intmodule) {
 		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_CORE;
 		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_CORE;
@@ -208,20 +232,32 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_CORE;
 		case (uint32_t)SERCOM4: return SERCOM4_GCLK_ID_CORE;
 		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_CORE;
+	#ifdef SERCOM6
 		case (uint32_t)SERCOM6: return SERCOM6_GCLK_ID_CORE;
+	#endif
+	#ifdef SERCOM7
 		case (uint32_t)SERCOM7: return SERCOM7_GCLK_ID_CORE;
+	#endif
 		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
-		default: return 0;
-	}
-	#elif defined SAME53
-	switch(intmodule) {
-		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_CORE;
-		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_CORE;
-		case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_CORE;
-		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_CORE;
-		case (uint32_t)SERCOM4: return SERCOM4_GCLK_ID_CORE;
-		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_CORE;
-		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
+		case (uint32_t)TC0:		return TC0_GCLK_ID;
+		case (uint32_t)TC1:		return TC1_GCLK_ID;
+		case (uint32_t)TC2:		return TC2_GCLK_ID;
+		case (uint32_t)TC3:		return TC3_GCLK_ID;
+		case (uint32_t)TC4:		return TC4_GCLK_ID;
+		case (uint32_t)TC5:		return TC5_GCLK_ID;
+	#ifdef TC6
+		case (uint32_t)TC6:		return TC6_GCLK_ID;
+	#endif
+	#ifdef TC7
+		case (uint32_t)TC7:		return TC7_GCLK_ID;
+	#endif
+		case (uint32_t)TCC0:	return TCC0_GCLK_ID;
+		case (uint32_t)TCC1:	return TCC1_GCLK_ID;
+		case (uint32_t)TCC2:	return TCC2_GCLK_ID;
+		case (uint32_t)TCC3:	return TCC3_GCLK_ID;
+		case (uint32_t)TCC4:	return TCC4_GCLK_ID;
+		case (uint32_t)EIC:		return EIC_GCLK_ID;
+		case (uint32_t)DAC:		return DAC_GCLK_ID;
 		default: return 0;
 	}
 	#elif defined SAMD20
