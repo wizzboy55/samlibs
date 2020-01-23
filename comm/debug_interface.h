@@ -10,6 +10,7 @@
 #define DEBUG_INTERFACE_H_
 
 #include <stdio.h>
+#include "usart.h"
 
 #if DEBUG_VERBOSE_LEVEL > 0
 #define DEBUG_printf(X)	debug_printf X
@@ -19,7 +20,7 @@
 #define DEBUG_verbose(X) do{} while(0)
 #endif
 
-void debug_init(void);
+void debug_init(usartConfig_t* config);
 
 void debug_verbose(uint8_t verbose, const char *fmt, ...);
 

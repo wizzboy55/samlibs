@@ -10,30 +10,27 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <hpl_pm_base.h>
-#include <hpl_gclk_base.h>
-#include <hal_gpio.h>
-#include <hal_io.h>
-
-#include <peripheral_clk_config.h>
 
 #include "samclk.h"
 #include "samgpio.h"
 #include "HardwareDescriptor.h"
 
-#define DEBUG_SERCOM_BAUDRATE 115200
-
 #define DEBUG_BUFSIZE 128
 char buf[DEBUG_BUFSIZE];
 
+usartConfig_t* debug_usart_config;
+
 void debug_putchar(char c) {
+	
+	Sercom* sercomdevice = (Sercom *)debug_usart_config->sercom;
+	
 	if(c == '\n') {
 		debug_putchar('\r');
 	}
-	while(DEBUG_SERCOM->USART.INTFLAG.bit.DRE == 0) {
+	while(sercomdevice->USART.INTFLAG.bit.DRE == 0) {
 		
 	}
-	DEBUG_SERCOM->USART.DATA.reg = c;
+	sercomdevice->USART.DATA.reg = c;
 }
 
 void debug_verbose(uint8_t verbose, const char *fmt, ...) {
@@ -41,7 +38,6 @@ void debug_verbose(uint8_t verbose, const char *fmt, ...) {
 	va_start(args, fmt);
 	#if(DEBUG_UART == 1)
 		if(verbose <= DEBUG_VERBOSE_LEVEL) {
-			debug_init();
 			vsnprintf(buf, DEBUG_BUFSIZE, fmt, args);
 			const char *str = buf;
 			while(*str != 0x00) {
@@ -57,7 +53,6 @@ void debug_printf(const char *fmt, ...) {
 	#if DEBUG_UART == 1
 		va_list args;
 		va_start(args, fmt);
-		debug_init();
 		vsnprintf(buf, DEBUG_BUFSIZE, fmt, args);
 		const char *str = buf;
 		while(*str != 0x00) {
@@ -74,33 +69,37 @@ void debug_putstring(const char *str) {
 	}
 }
 
-void debug_init(void) {
+void debug_init(usartConfig_t* config) {
 
 	#if DEBUG_UART == 1
-		if(DEBUG_SERCOM->USART.CTRLA.bit.MODE == SERCOM_USART_CTRLA_MODE(0x01)) {
+		debug_usart_config = config;	
+
+		Sercom* sercomdevice = (Sercom *)config->sercom;
+	
+		if(sercomdevice->USART.CTRLA.bit.MODE == SERCOM_USART_CTRLA_MODE(0x01)) {
 			return;
 		}
 
-		samclk_enable_peripheral_clock(DEBUG_SERCOM);
-		samclk_enable_gclk_channel(DEBUG_SERCOM, 0);
+		samclk_enable_peripheral_clock(sercomdevice);
+		samclk_enable_gclk_channel(sercomdevice, config->clksource);
 
-		DEBUG_SERCOM->USART.CTRLA.reg = SERCOM_USART_CTRLA_SWRST;
+		sercomdevice->USART.CTRLA.reg = SERCOM_USART_CTRLA_SWRST;
 
 		// Wait while reset is in effect
-		while(DEBUG_SERCOM->USART.CTRLA.bit.SWRST) {
+		while(sercomdevice->USART.CTRLA.bit.SWRST) {
 
 		}
 
-		DEBUG_SERCOM->USART.CTRLB.reg = SERCOM_USART_CTRLB_TXEN;
+		sercomdevice->USART.CTRLB.reg = SERCOM_USART_CTRLB_TXEN;
 
-		DEBUG_SERCOM->USART.BAUD.reg = 65536 - ((65536 * 16.0f * DEBUG_SERCOM_BAUDRATE) / CONF_CPU_FREQUENCY);
+		sercomdevice->USART.BAUD.reg = 65536 - ((65536 * 16.0f * config->baudrate) / CONF_CPU_FREQUENCY);
 
-		DEBUG_SERCOM->USART.INTENCLR.reg = 0xFF;
+		sercomdevice->USART.INTENCLR.reg = 0xFF;
 
-		DEBUG_SERCOM->USART.INTENSET.bit.DRE = 1;
+		sercomdevice->USART.INTENSET.bit.DRE = 1;
 
-		DEBUG_SERCOM->USART.CTRLA.reg = SERCOM_USART_CTRLA_MODE(0x01) | SERCOM_USART_CTRLA_RXPO(0x01) | SERCOM_USART_CTRLA_ENABLE | SERCOM_USART_CTRLA_DORD;
+		sercomdevice->USART.CTRLA.reg = SERCOM_USART_CTRLA_MODE(0x01) | SERCOM_USART_CTRLA_RXPO(0x01) | SERCOM_USART_CTRLA_ENABLE | SERCOM_USART_CTRLA_DORD;
 
-		samgpio_setPinFunction(DEBUG_TX_GPIO, DEBUG_TX_PINMUX);
+		samgpio_setPinFunction(config->pin_tx, config->pinmux);
 	#endif
 }
