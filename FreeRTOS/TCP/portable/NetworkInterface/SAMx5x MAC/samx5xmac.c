@@ -40,65 +40,84 @@ BaseType_t LinkIsUp = pdFALSE;
 #endif
 
 BaseType_t xSAMx5xMAC_WriteToPHY(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t data) {
-	GMAC->NCR.bit.MPE = 1;
-	
-	GMAC->IER.bit.MFS = 1;
-
-	GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b01) | GMAC_MAN_DATA(data);
-
-	if(xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(500)) == pdTRUE) {
+	if(pMacConfig->i2cConfig != NULL) {
+		uint8_t *data_bytes = (uint8_t *)&data;
+		i2c_master_writeBytes(pMacConfig->i2cConfig, phyaddr, reg, data_bytes, 2);
 		return pdPASS;
-	}
+	} else {
+		GMAC->NCR.bit.MPE = 1;
+		
+		GMAC->IER.bit.MFS = 1;
 
-	DEBUG_printf( ("ERROR: Unable to write PHY.\n") );
-	return pdFAIL;
+		GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b01) | GMAC_MAN_DATA(data);
+
+		if(xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(500)) == pdTRUE) {
+			return pdPASS;
+		}
+
+		DEBUG_printf( ("ERROR: Unable to write PHY.\n") );
+		return pdFAIL;
+	}
 }
 
 BaseType_t xSAMx5xMAC_ReadFromPHY(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t *data) {
-	GMAC->NCR.bit.MPE = 1;
-	
-	GMAC->IER.bit.MFS = 1;
+	if(pMacConfig->i2cConfig != NULL) {
+		return pdFAIL;
+	} else {
+		GMAC->NCR.bit.MPE = 1;
+		
+		GMAC->IER.bit.MFS = 1;
 
-	GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b10);
-	
-	if(xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(500)) == pdTRUE) {
-		*data = GMAC->MAN.bit.DATA;
-		return pdPASS;
-	}
-
-	DEBUG_printf( ("ERROR: Unable to read from PHY.\n") );
-	return pdFAIL;
-}
-
-BaseType_t xSAMx5xMAC_WriteToPHYWait(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t data) {
-	GMAC->NCR.bit.MPE = 1;
-
-	GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b01) | GMAC_MAN_DATA(data);
-
-	for(BaseType_t tries = 10; tries > 0; tries--) {
-		vTaskDelay(pdMS_TO_TICKS(5));
-		if(GMAC->NSR.bit.IDLE) {
-			return pdPASS;
-		}
-	}
-
-	return pdFAIL;
-}
-
-BaseType_t xSAMx5xMAC_ReadFromPHYWait(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t *data) {
-	GMAC->NCR.bit.MPE = 1;
-
-	GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b10);
-	
-	for(BaseType_t tries = 10; tries > 0; tries--) {
-		vTaskDelay(pdMS_TO_TICKS(5));
-		if(GMAC->NSR.bit.IDLE) {
+		GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b10);
+		
+		if(xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(500)) == pdTRUE) {
 			*data = GMAC->MAN.bit.DATA;
 			return pdPASS;
 		}
-	}
 
-	return pdFAIL;
+		DEBUG_printf( ("ERROR: Unable to read from PHY.\n") );
+		return pdFAIL;
+	}
+}
+
+BaseType_t xSAMx5xMAC_WriteToPHYWait(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t data) {
+	if(pMacConfig->i2cConfig != NULL) {
+		
+		return pdFAIL;
+	} else {
+		GMAC->NCR.bit.MPE = 1;
+
+		GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b01) | GMAC_MAN_DATA(data);
+
+		for(BaseType_t tries = 10; tries > 0; tries--) {
+			vTaskDelay(pdMS_TO_TICKS(5));
+			if(GMAC->NSR.bit.IDLE) {
+				return pdPASS;
+			}
+		}
+
+		return pdFAIL;
+	}
+}
+
+BaseType_t xSAMx5xMAC_ReadFromPHYWait(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t *data) {
+	if(pMacConfig->i2cConfig != NULL) {
+		return pdFAIL;
+	} else {
+		GMAC->NCR.bit.MPE = 1;
+
+		GMAC->MAN.reg = GMAC_MAN_WTN(0b10) | GMAC_MAN_PHYA(phyaddr) | GMAC_MAN_REGA(reg) | (((clause == PHY_CLAUSE_22) & 0x1) << GMAC_MAN_CLTTO_Pos) | GMAC_MAN_OP(0b10);
+		
+		for(BaseType_t tries = 10; tries > 0; tries--) {
+			vTaskDelay(pdMS_TO_TICKS(5));
+			if(GMAC->NSR.bit.IDLE) {
+				*data = GMAC->MAN.bit.DATA;
+				return pdPASS;
+			}
+		}
+
+		return pdFAIL;
+	}
 }
 
 SAMx5xMAC_ReceiveBuffer_t* pxSAMx5xMAC_GetNextReceiveBuffer(void) {
@@ -325,9 +344,13 @@ void vSAMx5xMAC_ResetPHY(void) {
 
 BaseType_t xSAMx5xMAC_HardwareInit(SAMx5xMAC_HwConfig_t* pMacConfig) {
 
-	// MDIO
-	samgpio_setPinFunction(pMacConfig->gpio_mdio_sda, pMacConfig->pinmux_mdio_sda);
-	samgpio_setPinFunction(pMacConfig->gpio_mdc_scl, pMacConfig->pinmux_mdc_scl);
+	if(pMacConfig->i2cConfig != NULL) {
+		i2c_master_initIF(pMacConfig->i2cConfig);
+	} else {
+		// MDIO
+		samgpio_setPinFunction(pMacConfig->gpio_mdio, pMacConfig->pinmux_mdio);
+		samgpio_setPinFunction(pMacConfig->gpio_mdc, pMacConfig->pinmux_mdc);
+	}
 
 	#ifdef SAME54
 	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), PINMUX_PA12L_GMAC_GRX1);
@@ -416,7 +439,7 @@ BaseType_t xSAMx5xMAC_Initialize(SAMx5xMAC_HwConfig_t* pConfig, SAMx5xMAC_PhyIni
 		pMacConfig = pConfig;
 
 		samclk_enable_peripheral_clock(GMAC);
-		samclk_enable_gclk_channel(GMAC, 0);
+		samclk_enable_gclk_channel(GMAC, pMacConfig->clksource);
 
 		GMAC->NCR.reg = GMAC_NCR_CLRSTAT;
 
