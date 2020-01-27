@@ -81,7 +81,7 @@ void pwm_setDutyCycle(pwmConfig_t* config, uint8_t channel, uint16_t duty_16bit)
 				else if(duty_16bit == 0xFFFF)
 					tcdevice->COUNT32.CC[channel].reg = 0xFFFFFFFF; // 100%
 				else
-					tcdevice->COUNT32.CC[channel].reg = (duty_16bit << 16) | 0x7FFF; // Fit on 32 bits
+					tcdevice->COUNT32.CC[channel].reg = ((uint32_t)duty_16bit << 16) | 0x7FFF; // Fit it on 32 bits
 				break;
 		}
 	}
