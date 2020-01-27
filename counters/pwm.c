@@ -31,9 +31,15 @@ BaseType_t pwm_init(pwmConfig_t* config) {
 	
 	tcdevice->COUNT32.WAVE.bit.WAVEGEN = TC_WAVE_WAVEGEN_NPWM_Val;
 	
-	tcdevice->COUNT32.CTRLA.bit.ENABLE = 1;
+	// tcdevice->COUNT32.CTRLA.bit.ENABLE = 1;
 	
 	return pdPASS;
+}
+
+void pwm_setEnable(pwmConfig_t* config, bool enable)
+{
+	Tc* tcdevice = (Tc *)config->module;
+	tcdevice->COUNT32.CTRLA.bit.ENABLE = enable;
 }
 
 uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel) {
