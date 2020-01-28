@@ -36,5 +36,7 @@ typedef struct {
 } PhyMaintenanceParameters_t;
 
 void vPHYGenericMaintenanceTask(void *p);
+void vPHYGenericInterruptHandler(void);
+void vPHYGenericPowerEventHandler(void);
 
 #endif /* PHY_GENERIC_H_ */

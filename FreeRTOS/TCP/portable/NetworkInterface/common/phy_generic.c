@@ -104,3 +104,11 @@ void vPHYGenericMaintenanceTask(void *p) {
 		}
 	}
 }
+
+void vPHYGenericInterruptHandler(void) {
+	
+}
+
+void vPHYGenericPowerEventHandler(void) {
+	
+}
