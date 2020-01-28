@@ -16,6 +16,7 @@
 #include "list.h"
 #include "FreeRTOS_IP.h"
 #include "i2c.h"
+#include "samgpio.h"
 
 #include "IEEE802Definitions.h"
 
@@ -25,17 +26,14 @@
 typedef enum PhyClause {PHY_CLAUSE_22 = 22, PHY_CLAUSE_45 = 45} eSAMx5xMAC_PhyClause_t;
 
 typedef struct {
-	uint32_t gpio_mdc;
-	uint32_t gpio_mdio;
-	uint32_t pinmux_mdc;
-	uint32_t pinmux_mdio;
-	uint32_t gpio_reset;
-	BaseType_t useInterrupt;
-	uint32_t gpio_interrupt;
-	uint32_t pinmux_interrupt;
-	uint32_t gpio_crsdv;
-	uint32_t pinumx_crsdv;
-	uint8_t phyaddr;
+	GPIOPin_t gpio_mdc;
+	GPIOPin_t gpio_mdio;
+	PinMux_t pinmux_mdc;
+	PinMux_t pinmux_mdio;
+	GPIOPin_t gpio_reset;
+	GPIOPin_t gpio_interrupt;
+	GPIOPin_t gpio_powerEvent;
+	GPIOPin_t gpio_crsdv;
 	uint8_t clksource;
 	BaseType_t useMII;
 	eSAMx5xMAC_PhyClause_t phyclause;

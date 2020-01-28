@@ -10,7 +10,6 @@
 #include "hal_gpio.h"
 
 #include "samclk.h"
-#include "samgpio.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -353,36 +352,36 @@ BaseType_t xSAMx5xMAC_HardwareInit(SAMx5xMAC_HwConfig_t* pMacConfig) {
 	}
 
 	#ifdef SAME54
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), PINMUX_PA12L_GMAC_GRX1);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 13), PINMUX_PA13L_GMAC_GRX0);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 14), PINMUX_PA14L_GMAC_GTXCK);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 15), PINMUX_PA15L_GMAC_GRXER);
-	samgpio_setPinFunction(pMacConfig->gpio_crsdv, pMacConfig->pinumx_crsdv);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 17), PINMUX_PA17L_GMAC_GTXEN);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 18), PINMUX_PA18L_GMAC_GTX0);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 19), PINMUX_PA19L_GMAC_GTX1);
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 13), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 14), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 15), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(pMacConfig->gpio_crsdv, samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 17), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 18), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 19), samgpio_getModulePinmux(GMAC));
 	GMAC->UR.reg = 0; // RMII
 	if(pMacConfig->useMII == pdTRUE) {
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 14), PINMUX_PC14L_GMAC_GRX3);
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 15), PINMUX_PC15L_GMAC_GRX2);
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 16), PINMUX_PC16L_GMAC_GTX2);
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 17), PINMUX_PC17L_GMAC_GTX3);
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 18), PINMUX_PC18L_GMAC_GRXCK);
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 19), PINMUX_PC19L_GMAC_GTXER);
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 20), PINMUX_PC20L_GMAC_GRXDV);
-		samgpio_setPinFunction(GPIO(GPIO_PORTC, 21), PINMUX_PC21L_GMAC_GCOL);
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 14), samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 15), samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 16), samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 17), samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 18), samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 19), samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 20), samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(GPIO(GPIO_PORTC, 21), samgpio_getModulePinmux(GMAC));
 		GMAC->UR.reg = 1; // MII
 	}
 	#elif defined SAME53
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), PINMUX_PA12L_GMAC_GRX1);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 13), PINMUX_PA13L_GMAC_GRX0);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 14), PINMUX_PA14L_GMAC_GTXCK);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 15), PINMUX_PA15L_GMAC_GRXER);
-	samgpio_setPinFunction(pMacConfig->gpio_crsdv, pMacConfig->pinumx_crsdv);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 17), PINMUX_PA17L_GMAC_GTXEN);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 18), PINMUX_PA18L_GMAC_GTX0);
-	samgpio_setPinFunction(GPIO(GPIO_PORTA, 19), PINMUX_PA19L_GMAC_GTX1);
-	GMAC->UR.reg = 0; // RMII
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 12), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 13), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 14), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 15), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(pMacConfig->gpio_crsdv, samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 17), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 18), samgpio_getModulePinmux(GMAC));
+	samgpio_setPinFunction(GPIO(GPIO_PORTA, 19), samgpio_getModulePinmux(GMAC));
+	GMAC->UR.bit.MII = 0; // RMII
 	#else
 	#error "MCU Family not supported."
 	return pdFAIL;
@@ -391,10 +390,20 @@ BaseType_t xSAMx5xMAC_HardwareInit(SAMx5xMAC_HwConfig_t* pMacConfig) {
 	gpio_set_pin_level(pMacConfig->gpio_reset, 1);
 	gpio_set_pin_direction(pMacConfig->gpio_reset, GPIO_DIRECTION_OUT);
 
-	if(pMacConfig->useInterrupt == pdTRUE) {
+	if(pMacConfig->gpio_interrupt != GPIO_NONE) {
 		samgpio_setPinDirection(pMacConfig->gpio_interrupt, GPIO_DIRECTION_IN);
 		samgpio_setPinPullMode(pMacConfig->gpio_interrupt, GPIO_PULL_UP);
-		samgpio_setPinFunction(pMacConfig->gpio_interrupt, pMacConfig->pinmux_interrupt);
+		samgpio_setPinFunction(pMacConfig->gpio_interrupt, samgpio_getModulePinmux(EIC));
+		sam_EICInit(0);
+		sam_EICEnableExtIRQ(sam_getGPIOEICChannel(pMacConfig->gpio_interrupt));
+	}
+	
+	if(pMacConfig->gpio_powerEvent != GPIO_NONE) {
+		samgpio_setPinDirection(pMacConfig->gpio_powerEvent, GPIO_DIRECTION_IN);
+		samgpio_setPinPullMode(pMacConfig->gpio_powerEvent, GPIO_PULL_UP);
+		samgpio_setPinFunction(pMacConfig->gpio_powerEvent, samgpio_getModulePinmux(EIC));
+		sam_EICInit(0);
+		sam_EICEnableExtIRQ(sam_getGPIOEICChannel(pMacConfig->gpio_powerEvent));
 	}
 
 	return pdPASS;
