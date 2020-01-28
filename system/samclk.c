@@ -287,7 +287,7 @@ uint8_t samclk_get_peripheral_slowclockid(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#ifdef SAME5x
+	#ifdef SAME54
 	switch(intmodule) {
 		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_SLOW;
 		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_SLOW;
