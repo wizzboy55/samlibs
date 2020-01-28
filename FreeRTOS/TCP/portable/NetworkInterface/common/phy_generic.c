@@ -28,6 +28,8 @@ void vPHYGenericMaintenanceTask(void *p) {
 	Clause22_AutoNegotiationExpansion_t connectAutoNegExpansion;
 
 	params->getMACSpeedCapability(&macLinkCapabilities);
+	
+	BaseType_t linkWasUp = pdFALSE;
 
 	for(;;) {
 		
@@ -88,17 +90,18 @@ void vPHYGenericMaintenanceTask(void *p) {
 					connectedLinkCapabilities.bit.lcFull10BaseT = connectedLinkPartnerAbility.bit.b10BaseTFullDuplex;
 					connectedLinkCapabilities.bit.lcHalf10BaseT = connectedLinkPartnerAbility.bit.b10BaseTHalfDuplex;
 
-					if(phyBasicStatus.bit.LinkStatus) {
+					if(phyBasicStatus.bit.LinkStatus != linkWasUp) {
+						// Link status changed
+						
 						// Link is UP
 						if(params->setInterfaceSpeed(phySelfLinkCapabilities, connectedLinkCapabilities) == pdPASS) {
-							params->linkStatusChange(pdTRUE);
+							params->linkStatusChange(phyBasicStatus.bit.LinkStatus);
 						} else {
 							DEBUG_printf( ("ERROR: Network Incompatible Link Speeds.\n") );
 							params->linkStatusChange(pdFALSE);
 						}
-					} else {
-						params->linkStatusChange(pdFALSE);
 					}
+					linkWasUp = phyBasicStatus.bit.LinkStatus;
 				}
 			}
 		}

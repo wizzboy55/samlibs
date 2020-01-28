@@ -168,16 +168,21 @@ BaseType_t xSAMx5xMAC_SetInterfaceSpeed(IEEELinkCapabilities_t selfCapabilities,
 	if(selfCapabilities.bit.lcFull100BaseTX && connectedCapabilities.bit.lcFull100BaseTX) {
 		GMAC->NCFGR.bit.FD = 1;
 		GMAC->NCFGR.bit.SPD = 1;
+		debug_printf("GMAC: Now in 100BaseTX FD\n");
 	} else if(selfCapabilities.bit.lcHalf100BaseTX && connectedCapabilities.bit.lcHalf100BaseTX) {
 		GMAC->NCFGR.bit.FD = 0;
 		GMAC->NCFGR.bit.SPD = 1;
+		debug_printf("GMAC: Now in 100BaseTX HD\n");
 	} else if(selfCapabilities.bit.lcFull10BaseT && connectedCapabilities.bit.lcFull10BaseT) {
 		GMAC->NCFGR.bit.FD = 1;
 		GMAC->NCFGR.bit.SPD = 0;
-	} else if(selfCapabilities.bit.lcHalf100BaseTX && connectedCapabilities.bit.lcHalf100BaseTX) {
+		debug_printf("GMAC: Now in 10BaseT FD\n");
+	} else if(selfCapabilities.bit.lcHalf10BaseT && connectedCapabilities.bit.lcHalf10BaseT) {
 		GMAC->NCFGR.bit.FD = 0;
 		GMAC->NCFGR.bit.SPD = 0;
+		debug_printf("GMAC: Now in 10BaseT HD\n");
 	} else {
+		debug_printf("GMAC: No compatible speed\n");
 		return pdFAIL;
 	}
 
