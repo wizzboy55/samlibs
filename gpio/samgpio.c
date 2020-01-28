@@ -124,3 +124,39 @@ uint8_t samgpio_getPinLevel(const GPIOPin_t gpio) {
 		return (PORT->Group[port].OUT.reg & pinoffset) > 0;
 	}
 }
+
+PinMux_t samgpio_getModulePinmux(const void* module) {
+	switch((uint32_t)module) {
+		case (uint32_t)EIC:
+			return 0;
+		case (uint32_t)ADC0:
+		case (uint32_t)ADC1:
+		case (uint32_t)DAC:
+		case (uint32_t)AC:
+			return 1;
+		case (uint32_t)TC0:
+		case (uint32_t)TC1:
+		case (uint32_t)TC2:
+		case (uint32_t)TC3:
+		case (uint32_t)TC4:
+		case (uint32_t)TC5:
+	#ifdef TC6
+		case (uint32_t)TC6:
+	#endif
+	#ifdef TC7
+		case (uint32_t)TC7:
+	#endif
+			return 4;
+		case (uint32_t)TCC0:
+		case (uint32_t)TCC1:
+		case (uint32_t)TCC2:
+		case (uint32_t)TCC3:
+			return 5;
+		case (uint32_t)CCL:
+			return 13;
+		case (uint32_t)GMAC:
+			return 11;
+		default:
+			return GPIO_PIN_FUNCTION_OFF;
+	}
+}
