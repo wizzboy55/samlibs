@@ -12,13 +12,18 @@
 #include <stdint.h>
 #include "hpl_gpio.h"
 
-void samgpio_setPinFunction(const uint32_t gpio, const uint32_t function);
-void samgpio_setPinDirection(const uint32_t gpio, const enum gpio_direction direction);
-void samgpio_setPinLevel(const uint32_t gpio, const uint8_t level);
-void samgpio_setPin(const uint32_t gpio);
-void samgpio_clearPin(const uint32_t gpio);
-void samgpio_togglePinLevel(const uint32_t gpio);
-void samgpio_setPinPullMode(const uint32_t gpio, const enum gpio_pull_mode pull_mode);
-uint8_t samgpio_getPinLevel(const uint32_t gpio);
+typedef uint32_t GPIOPin_t;
+typedef uint32_t PinMux_t;
+
+#define GPIO_NONE	0xFFFFFFFF
+
+void samgpio_setPinFunction(const GPIOPin_t gpio, const PinMux_t function);
+void samgpio_setPinDirection(const GPIOPin_t gpio, const enum gpio_direction direction);
+void samgpio_setPinLevel(const GPIOPin_t gpio, const uint8_t level);
+void samgpio_setPin(const GPIOPin_t gpio);
+void samgpio_clearPin(const GPIOPin_t gpio);
+void samgpio_togglePinLevel(const GPIOPin_t gpio);
+void samgpio_setPinPullMode(const GPIOPin_t gpio, const enum gpio_pull_mode pull_mode);
+uint8_t samgpio_getPinLevel(const GPIOPin_t gpio);
 
 #endif /* SAMGPIO_H_ */
