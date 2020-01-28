@@ -28,5 +28,6 @@ BaseType_t pwm_init(pwmConfig_t* config);
 uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel);
 
 void pwm_setDutyCycle(pwmConfig_t* config, uint8_t channel, uint16_t duty_16bit);
+void pwm_setEnable(pwmConfig_t* config, bool enable);
 
 #endif /* PWM_H_ */
