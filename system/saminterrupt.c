@@ -80,12 +80,22 @@ void sam_EICInit(uint8_t clksource) {
 	EIC->CTRLA.bit.ENABLE = 1;
 }
 
+uint32_t sam_EICGetIRQn(eEICChannels_t channel) {
+	return channel + EIC_0_IRQn;
+}
+
 inline void sam_EICEnableExtIRQ(eEICChannels_t channel) {
 	EIC->INTENSET.bit.EXTINT = (1<<channel);
+	NVIC_EnableIRQ(sam_EICGetIRQn(channel));
 }
 
 inline void sam_EICDisableExtIRQ(eEICChannels_t channel) {
 	EIC->INTENCLR.bit.EXTINT = (1<<channel);
+	NVIC_DisableIRQ(sam_EICGetIRQn(channel));
+}
+
+inline void sam_EICClearIRQ(eEICChannels_t channel) {
+	EIC->INTFLAG.bit.EXTINT |= (1<<channel);
 }
 
 void sam_EICConfigExt(eEICChannels_t channel, BaseType_t debouce, BaseType_t filter, eEICSense_t sense) {
@@ -95,4 +105,14 @@ void sam_EICConfigExt(eEICChannels_t channel, BaseType_t debouce, BaseType_t fil
 	} else {
 		EIC->CONFIG[1].reg = ((((filter == pdTRUE) << 3) | (sense & 0x07)) & 0x0F) << ((channel - EIC8) * 4);
 	}
+}
+
+eEICChannels_t sam_getGPIOEICChannel(GPIOPin_t gpio) {
+	if(gpio == GPIO(GPIO_PORTA, 8)) {
+		return EIC_NMI;
+	}
+	
+	uint8_t pin = GPIO_PIN(gpio);
+	
+	return (eEICChannels_t)(pin & 0xF);
 }
