@@ -16,6 +16,7 @@
 #include "list.h"
 #include "FreeRTOS_IP.h"
 #include "i2c.h"
+#include "saminterrupt.h"
 #include "samgpio.h"
 
 #include "IEEE802Definitions.h"
@@ -39,6 +40,10 @@ typedef struct {
 	eSAMx5xMAC_PhyClause_t phyclause;
 	IEEELinkCapabilities_t linkCapabilities;
 	i2cConfig_t *i2cConfig;
+	TaskFunction_t phyMaintenanceTask;
+	void* phyMaintenanceParameters;
+	InterruptHandler_t phyInterruptHandler;
+	InterruptHandler_t phyPowerEventHandler;
 } SAMx5xMAC_HwConfig_t;
 
 typedef struct {
@@ -97,10 +102,18 @@ typedef struct {
 	} Word1;
 } SAMx5xMAC_TransmitBuffer_t;
 
-typedef BaseType_t (*SAMx5xMAC_PhyInitCallback)(uint8_t address);
-
-BaseType_t xSAMx5xMAC_Initialize(SAMx5xMAC_HwConfig_t* pConfig, SAMx5xMAC_PhyInitCallback phyInit);
+BaseType_t xSAMx5xMAC_Initialize(SAMx5xMAC_HwConfig_t* pConfig);
 BaseType_t xSAMx5xMAC_OutputFrame(NetworkBufferDescriptor_t * const pxDescriptor, BaseType_t xReleaseAfterSend);
 void vSAMx5xMAC_SetMACAddress(uint8_t macAddress[]);
+void xSAMx5xMAC_LinkStatusChanged(BaseType_t linkUp);
+
+BaseType_t xSAMx5xMAC_MIIWriteToPHY(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t data, BaseType_t wait);
+BaseType_t xSAMx5xMAC_MIIReadFromPHY(uint8_t phyaddr, uint8_t clause, uint8_t reg, uint16_t *data, BaseType_t wait);
+BaseType_t xSAMx5xMAC_SetInterfaceSpeed(IEEELinkCapabilities_t selfCapabilities, IEEELinkCapabilities_t connectedCapabilities);
+void xSAMx5xMAC_LinkStatusChanged(BaseType_t linkUp);
+void xSAMx5xMAC_GetMACSpeedCapability(IEEELinkCapabilities_t* capabilities);
+
+BaseType_t xSAMx5xMAC_I2CWriteToPHY(uint8_t phyaddr, uint16_t reg, uint8_t *data, uint16_t count);
+BaseType_t xSAMx5xMAC_I2CReadFromPHY(uint8_t phyaddr, uint16_t reg, uint8_t *data, uint16_t count);
 
 #endif /* SAMX5XMAC_H_ */
