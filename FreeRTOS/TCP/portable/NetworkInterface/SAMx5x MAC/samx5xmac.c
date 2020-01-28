@@ -262,8 +262,8 @@ BaseType_t xSAMx5xMAC_HardwareInit(SAMx5xMAC_HwConfig_t* pMacConfig) {
 		i2c_master_initIF(pMacConfig->i2cConfig);
 	} else {
 		// MDIO
-		samgpio_setPinFunction(pMacConfig->gpio_mdio, pMacConfig->pinmux_mdio);
-		samgpio_setPinFunction(pMacConfig->gpio_mdc, pMacConfig->pinmux_mdc);
+		samgpio_setPinFunction(pMacConfig->gpio_mdio, samgpio_getModulePinmux(GMAC));
+		samgpio_setPinFunction(pMacConfig->gpio_mdc, samgpio_getModulePinmux(GMAC));
 	}
 
 	#ifdef SAME54
