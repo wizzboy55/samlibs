@@ -11,6 +11,7 @@
 
 #include "FreeRTOS.h"
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum {PWM_COUNT16 = 0, PWM_COUNT8, PWM_COUNT32} PWMCounterWidth_t;
 
