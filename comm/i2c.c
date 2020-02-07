@@ -45,7 +45,8 @@ void i2c_master_initIF(i2cConfig_t* config) {
 	sercomdevice->I2CM.CTRLA.bit.INACTOUT = 1;
 
 	// We are assuming GCLK source clock is the main clock (CONF_CPU_FREQUENCY) divided by DIV to calculate the baud
-	uint16_t baud = CONF_CPU_FREQUENCY / GCLK->GENCTRL[config->clksource].bit.DIV / (2 * config->baudrate) - 1;
+	uint8_t div = GCLK->GENCTRL[config->clksource].bit.DIV == 0 ? 1 : GCLK->GENCTRL[config->clksource].bit.DIV; // Ensure != 0
+	uint16_t baud = CONF_CPU_FREQUENCY / div / (2 * config->baudrate) - 1;
 	ASSERT(baud <= 0xff); // Invalid baudrate for the chosen clock source
 	sercomdevice->I2CM.BAUD.reg = baud;
 
@@ -81,9 +82,9 @@ uint8_t i2c_master_readBytes_LE(i2cConfig_t* config, uint8_t device, uint8_t *bu
 	
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 	
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-	
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 
 	sercomdevice->I2CM.ADDR.reg = device | I2C_READMASK;
 
@@ -116,11 +117,10 @@ uint8_t i2c_master_readBytes_LE(i2cConfig_t* config, uint8_t device, uint8_t *bu
 uint8_t i2c_master_readBytes_BE(i2cConfig_t* config, uint8_t device, uint8_t *buf, uint16_t num) {
 	
 	Sercom* sercomdevice = (Sercom *)config->sercom;
-		
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 	
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
 
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 	sercomdevice->I2CM.ADDR.reg = device | I2C_READMASK;
 
 	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
@@ -153,9 +153,9 @@ uint8_t i2c_master_writeAddr_LE(i2cConfig_t* config, uint8_t device, uint8_t add
 	
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 	
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-	
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
@@ -174,9 +174,9 @@ uint8_t i2c_master_writeAddr16_LE(i2cConfig_t* config, uint8_t device, uint16_t 
 	
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 	
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
@@ -199,9 +199,9 @@ uint8_t i2c_master_writeAddr16_BE(i2cConfig_t* config, uint8_t device, uint16_t 
 	
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 	
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
@@ -224,9 +224,9 @@ uint8_t i2c_master_writeByte(i2cConfig_t* config, uint8_t device, uint8_t addr, 
 	
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 	
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 	
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
@@ -250,9 +250,9 @@ uint8_t i2c_master_writeBytes_LE(i2cConfig_t* config, uint8_t device, uint8_t ad
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-	
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+	
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
@@ -284,9 +284,9 @@ uint8_t i2c_master_writeBytes16_LE(i2cConfig_t* config, uint8_t device, uint16_t
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-	
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+	
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
@@ -322,9 +322,9 @@ uint8_t i2c_master_writeBytes16_BE(i2cConfig_t* config, uint8_t device, uint16_t
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-	
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+	
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
