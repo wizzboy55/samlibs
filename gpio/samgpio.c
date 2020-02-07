@@ -9,7 +9,7 @@
 
 #include "debug_interface.h"
 
-void samgpio_setPinFunction(const uint32_t gpio, const uint32_t function) {
+void samgpio_setPinFunction(const GPIOPin_t gpio, const PinMux_t function) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -29,7 +29,7 @@ void samgpio_setPinFunction(const uint32_t gpio, const uint32_t function) {
 	CRITICAL_SECTION_LEAVE()
 }
 
-void samgpio_setPinDirection(const uint32_t gpio, const enum gpio_direction direction) {
+void samgpio_setPinDirection(const GPIOPin_t gpio, const enum gpio_direction direction) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -54,7 +54,7 @@ void samgpio_setPinDirection(const uint32_t gpio, const enum gpio_direction dire
 	CRITICAL_SECTION_LEAVE()
 }
 
-void samgpio_setPinLevel(const uint32_t gpio, const uint8_t level) {
+void samgpio_setPinLevel(const GPIOPin_t gpio, const uint8_t level) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -67,21 +67,21 @@ void samgpio_setPinLevel(const uint32_t gpio, const uint8_t level) {
 	CRITICAL_SECTION_LEAVE()
 }
 
-void samgpio_setPin(const uint32_t gpio) {
+void samgpio_setPin(const GPIOPin_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
 	PORT->Group[port].OUTSET.reg = (1<<pin);
 }
 
-void samgpio_clearPin(const uint32_t gpio) {
+void samgpio_clearPin(const GPIOPin_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
 	PORT->Group[port].OUTCLR.reg = (1<<pin);
 }
 
-void samgpio_togglePinLevel(const uint32_t gpio) {
+void samgpio_togglePinLevel(const GPIOPin_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -90,7 +90,7 @@ void samgpio_togglePinLevel(const uint32_t gpio) {
 	CRITICAL_SECTION_LEAVE()
 }
 
-void samgpio_setPinPullMode(const uint32_t gpio, const enum gpio_pull_mode pull_mode) {
+void samgpio_setPinPullMode(const GPIOPin_t gpio, const enum gpio_pull_mode pull_mode) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -113,7 +113,7 @@ void samgpio_setPinPullMode(const uint32_t gpio, const enum gpio_pull_mode pull_
 	CRITICAL_SECTION_LEAVE()
 }
 
-uint8_t samgpio_getPinLevel(const uint32_t gpio) {
+uint8_t samgpio_getPinLevel(const GPIOPin_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin = GPIO_PIN(gpio);
 	uint32_t pinoffset  = (1<<pin);
@@ -122,5 +122,41 @@ uint8_t samgpio_getPinLevel(const uint32_t gpio) {
 		return (PORT->Group[port].IN.reg & pinoffset) > 0;
 	} else {
 		return (PORT->Group[port].OUT.reg & pinoffset) > 0;
+	}
+}
+
+PinMux_t samgpio_getModulePinmux(const void* module) {
+	switch((uint32_t)module) {
+		case (uint32_t)EIC:
+			return 0;
+		case (uint32_t)ADC0:
+		case (uint32_t)ADC1:
+		case (uint32_t)DAC:
+		case (uint32_t)AC:
+			return 1;
+		case (uint32_t)TC0:
+		case (uint32_t)TC1:
+		case (uint32_t)TC2:
+		case (uint32_t)TC3:
+		case (uint32_t)TC4:
+		case (uint32_t)TC5:
+	#ifdef TC6
+		case (uint32_t)TC6:
+	#endif
+	#ifdef TC7
+		case (uint32_t)TC7:
+	#endif
+			return 4;
+		case (uint32_t)TCC0:
+		case (uint32_t)TCC1:
+		case (uint32_t)TCC2:
+		case (uint32_t)TCC3:
+			return 5;
+		case (uint32_t)CCL:
+			return 13;
+		case (uint32_t)GMAC:
+			return 11;
+		default:
+			return GPIO_PIN_FUNCTION_OFF;
 	}
 }

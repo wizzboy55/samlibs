@@ -12,15 +12,14 @@
 #include "FreeRTOS.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "samgpio.h"
 
 typedef enum {PWM_COUNT16 = 0, PWM_COUNT8, PWM_COUNT32} PWMCounterWidth_t;
 
 typedef struct {
 	void* module;
-	uint8_t gpio_wo0;
-	uint8_t gpio_wo1;
-	uint8_t pinmux_wo0;
-	uint8_t pinmux_wo1;
+	GPIOPin_t gpio_wo0;
+	GPIOPin_t gpio_wo1;
 	uint8_t clksource;
 	PWMCounterWidth_t counterWidth;
 } pwmConfig_t;

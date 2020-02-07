@@ -20,18 +20,18 @@ BaseType_t pwm_init(pwmConfig_t* config) {
 	samclk_enable_gclk_channel(config->module, config->clksource);
 	samclk_enable_peripheral_clock(config->module);
 	
-	if(config->pinmux_wo0 != 0) {
-		samgpio_setPinFunction(config->gpio_wo0, config->pinmux_wo0);
+	if(config->gpio_wo0 != GPIO_NONE) {
+		samgpio_setPinFunction(config->gpio_wo0, samgpio_getModulePinmux(config->module));
 	}
-	if(config->pinmux_wo1 != 0) {
-		samgpio_setPinFunction(config->gpio_wo1, config->pinmux_wo1);
+	if(config->gpio_wo1 != GPIO_NONE) {
+		samgpio_setPinFunction(config->gpio_wo1, samgpio_getModulePinmux(config->module));
 	}
 	
 	tcdevice->COUNT32.CTRLA.bit.MODE = config->counterWidth;
 	
 	tcdevice->COUNT32.WAVE.bit.WAVEGEN = TC_WAVE_WAVEGEN_NPWM_Val;
 	
-	// tcdevice->COUNT32.CTRLA.bit.ENABLE = 1;
+	tcdevice->COUNT32.CTRLA.bit.ENABLE = 1;
 	
 	return pdPASS;
 }
