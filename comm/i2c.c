@@ -44,7 +44,10 @@ void i2c_master_initIF(i2cConfig_t* config) {
 	
 	sercomdevice->I2CM.CTRLA.bit.INACTOUT = 1;
 
-	sercomdevice->I2CM.BAUD.reg = (CONF_CPU_FREQUENCY / 10 / (2 * config->baudrate)) - 1;
+	// We are assuming GCLK source clock is the main clock (CONF_CPU_FREQUENCY) divided by DIV to calculate the baud
+	uint16_t baud = CONF_CPU_FREQUENCY / GCLK->GENCTRL[config->clksource].bit.DIV / (2 * config->baudrate) - 1;
+	ASSERT(baud <= 0xff); // Invalid baudrate for the chosen clock source
+	sercomdevice->I2CM.BAUD.reg = baud;
 
 	sercomdevice->I2CM.INTENCLR.reg = 0xFF;
 
