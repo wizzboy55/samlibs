@@ -123,7 +123,12 @@ uint8_t i2c_master_readBytes_BE(i2cConfig_t* config, uint8_t device, uint8_t *bu
 	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 	sercomdevice->I2CM.ADDR.reg = device | I2C_READMASK;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR);
+
+	if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
+		sercomdevice->I2CM.INTFLAG.bit.ERROR = 1; // Clear error flag
+		return 0;
+	}
 
 	uint16_t i;
 
@@ -159,11 +164,21 @@ uint8_t i2c_master_writeAddr_LE(i2cConfig_t* config, uint8_t device, uint8_t add
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR);
+
+	if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
+		sercomdevice->I2CM.INTFLAG.bit.ERROR = 1; // Clear error flag
+		return pdFALSE;
+	}
 
 	sercomdevice->I2CM.DATA.reg = addr;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR);
+	
+	if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
+		sercomdevice->I2CM.INTFLAG.bit.ERROR = 1; // Clear error flag
+		return pdFALSE;
+	}
 
 	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03;	// Send Stop
 
