@@ -13,6 +13,44 @@
 
 #include "debug_interface.h"
 
+BaseType_t xKSZ9893_SetMACInterfaceSpeed(KSZ9893_Parameters_t* params, IEEELinkCapabilities_t selfCapabilities, IEEELinkCapabilities_t macCapabilities) {
+	
+	KSZ9893_Port3XMIIPortControl0_t port3xmiiPortControl0;
+	port3xmiiPortControl0.bit.MACPortTransmitFlowControlEnable = 0;
+	port3xmiiPortControl0.bit.MACPortReceiveFlowControlEnable = 0;
+	
+	KSZ9893_Port3XMIIPortControl1_t port3xmiiPortControl1;
+	port3xmiiPortControl1.bit.PortInterfaceTypeSelect = 0b01;
+	port3xmiiPortControl1.bit.MII_RMII_RGMII_Modes = 0;
+	port3xmiiPortControl1.bit.PortSpeed1000 = 0;
+	
+	if(selfCapabilities.bit.lcFull100BaseTX && macCapabilities.bit.lcFull100BaseTX) {
+		port3xmiiPortControl0.bit.MACPortDuplex = 1;
+		port3xmiiPortControl0.bit.MACPortSpeed10_100 = 1;
+		debug_printf("KSZ9893: Now in 100BaseTX FD\n");
+	} else if(selfCapabilities.bit.lcHalf100BaseTX && macCapabilities.bit.lcHalf100BaseTX) {
+		port3xmiiPortControl0.bit.MACPortDuplex = 0;
+		port3xmiiPortControl0.bit.MACPortSpeed10_100 = 1;
+		debug_printf("KSZ9893: Now in 100BaseTX HD\n");
+	} else if(selfCapabilities.bit.lcFull10BaseT && macCapabilities.bit.lcFull10BaseT) {
+		port3xmiiPortControl0.bit.MACPortDuplex = 1;
+		port3xmiiPortControl0.bit.MACPortSpeed10_100 = 0;
+		debug_printf("KSZ9893: Now in 10BaseT FD\n");
+	} else if(selfCapabilities.bit.lcHalf10BaseT && macCapabilities.bit.lcHalf10BaseT) {
+		port3xmiiPortControl0.bit.MACPortDuplex = 0;
+		port3xmiiPortControl0.bit.MACPortSpeed10_100 = 0;
+		debug_printf("KSZ9893: Now in 10BaseT HD\n");
+	} else {
+		debug_printf("KSZ9893: No compatible speed\n");
+		return pdFAIL;
+	}
+
+	params->sercomWriteToPhy(params->phyAddr, KSZ9893_Port3XMIIPortControl0, (uint8_t*)&port3xmiiPortControl0, sizeof(KSZ9893_Port3XMIIPortControl0_t));
+	params->sercomWriteToPhy(params->phyAddr, KSZ9893_Port3XMIIPortControl1, (uint8_t*)&port3xmiiPortControl1, sizeof(KSZ9893_Port3XMIIPortControl1_t));
+
+	return pdPASS;
+}
+
 void vKSZ9893Setup(KSZ9893_Parameters_t* params) {
 	KSZ9893_PMEPinControl_t pmePinControl;
 	pmePinControl.reg = 0;
@@ -38,24 +76,13 @@ void vKSZ9893Setup(KSZ9893_Parameters_t* params) {
 	IEEELinkCapabilities_t macLinkCapabilities;
 	IEEELinkCapabilities_t ksz9893LinkCapabilities;
 	ksz9893LinkCapabilities.bit.lcFull100BaseTX = 1;
+	ksz9893LinkCapabilities.bit.lcHalf100BaseTX = 1;
+	ksz9893LinkCapabilities.bit.lcFull10BaseT = 1;
+	ksz9893LinkCapabilities.bit.lcHalf10BaseT = 1;
 	
 	params->getMACSpeedCapability(&macLinkCapabilities);
 	params->setInterfaceSpeed(macLinkCapabilities, ksz9893LinkCapabilities);
-	
-	KSZ9893_Port3XMIIPortControl0_t port3xmiiPortControl0;
-	port3xmiiPortControl0.bit.MACPortDuplex = 1;
-	port3xmiiPortControl0.bit.MACPortTransmitFlowControlEnable = 0;
-	port3xmiiPortControl0.bit.MACPortSpeed10_100 = 0;
-	port3xmiiPortControl0.bit.MACPortReceiveFlowControlEnable = 0;
-	
-	params->sercomWriteToPhy(params->phyAddr, KSZ9893_Port3XMIIPortControl0, (uint8_t*)&port3xmiiPortControl0, sizeof(KSZ9893_Port3XMIIPortControl0_t));
-	
-	KSZ9893_Port3XMIIPortControl1_t port3xmiiPortControl1;
-	port3xmiiPortControl1.bit.PortInterfaceTypeSelect = 0b01;
-	port3xmiiPortControl1.bit.MII_RMII_RGMII_Modes = 0;
-	port3xmiiPortControl1.bit.PortSpeed1000 = 0;
-	
-	params->sercomWriteToPhy(params->phyAddr, KSZ9893_Port3XMIIPortControl1, (uint8_t*)&port3xmiiPortControl1, sizeof(KSZ9893_Port3XMIIPortControl1_t));
+	xKSZ9893_SetMACInterfaceSpeed(params, ksz9893LinkCapabilities, macLinkCapabilities);
 }
 
 void vKSZ9893MaintenanceTask(void *p) {

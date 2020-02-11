@@ -470,7 +470,7 @@ void vSAMx5xMAC_SetMACAddress(uint8_t macAddress[]) {
 	GMAC->Sa[0].SAT.reg = macAddress[4] || (macAddress[5] << 8);
 }
 
-void PHY_INTTERUPT_HANDLER(void) {
+void PHY_INTERRUPT_HANDLER(void) {
 	sam_EICClearIRQ(pMacConfig->gpio_interrupt);
 	
 	if(pMacConfig->phyInterruptHandler != NULL) {
