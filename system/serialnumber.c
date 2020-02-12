@@ -20,6 +20,8 @@
 	#error Specified device not supported.
 #endif
 
+serialnumber_t g_serialnumber;
+
 void getSerialNumber(void) {
 	uint32_t *ptr = (uint32_t *) SN_WORD0_ADDR;
 	g_serialnumber.word0 = *ptr;
