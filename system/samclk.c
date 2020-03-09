@@ -73,6 +73,7 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 			case (uint32_t)SERCOM1: return BUS_APBC;
 			case (uint32_t)SERCOM2: return BUS_APBC;
 			case (uint32_t)SERCOM3: return BUS_APBC;
+			case (uint32_t)EIC:		return BUS_APBA;
 			default: return BUS_UNKNOWN;
 		}
 	#else
@@ -136,6 +137,7 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 			case (uint32_t)SERCOM1: return MCLK_APBCMASK_SERCOM1;
 			case (uint32_t)SERCOM2: return MCLK_APBCMASK_SERCOM2;
 			case (uint32_t)SERCOM3: return MCLK_APBCMASK_SERCOM3;
+			case (uint32_t)EIC:		return MCLK_APBAMASK_EIC;
 			default: return 0;
 		}
 	#else
@@ -276,6 +278,7 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 			case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_CORE;
 			case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_CORE;
 			case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_CORE;
+			case (uint32_t)EIC:		return EIC_GCLK_ID;
 			default: return 0;
 		}
 	#else
