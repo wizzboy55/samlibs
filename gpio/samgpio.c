@@ -126,6 +126,7 @@ uint8_t samgpio_getPinLevel(const GPIOPin_t gpio) {
 }
 
 PinMux_t samgpio_getModulePinmux(const void* module) {
+#if defined(SAME54) || defined(SAME53)
 	switch((uint32_t)module) {
 		case (uint32_t)EIC:
 			return 0;
@@ -159,4 +160,30 @@ PinMux_t samgpio_getModulePinmux(const void* module) {
 		default:
 			return GPIO_PIN_FUNCTION_OFF;
 	}
+#elif defined(SAMC20)
+	switch((uint32_t)module) {
+		case (uint32_t)EIC:
+			return 0;
+		case (uint32_t)ADC0:
+	#ifdef ADC1
+		case (uint32_t)ADC1:
+	#endif
+		case (uint32_t)AC:
+	#ifdef DAC
+		case (uint32_t)DAC:
+	#endif
+		case (uint32_t)PTC:
+			return 1;
+		case (uint32_t)TC0:
+		case (uint32_t)TC1:
+		case (uint32_t)TC2:
+		case (uint32_t)TC3:
+		case (uint32_t)TC4:
+			return 4;
+		case (uint32_t)CCL:
+			return 8;
+		default:
+			return GPIO_PIN_FUNCTION_OFF;
+	}
+#endif
 }
