@@ -64,6 +64,31 @@ void vDmxSetupPins(Sercom* sercomdevice, uint32_t rxpin, uint32_t txpin, uint8_t
 	}
 }
 
+void vDmxTask(void* p) {
+	DmxPortConfig_t* config = (DmxPortConfig_t*)p;
+	
+#define TICK_BLINK_DMX 500 / portTICK_PERIOD_MS
+#define TICK_BLINK_RDM 250 / portTICK_PERIOD_MS
+	
+	TickType_t blink_delay = TICK_BLINK_DMX;
+	
+	for(;;) {
+		vTaskDelay(blink_delay);
+		if(config->activity == DmxActivity_Dmx) {
+			samgpio_togglePinLevel(config->hw.ledpin);
+			blink_delay = TICK_BLINK_DMX;
+		} else if(config->activity == DmxActivity_Rdm) {
+			samgpio_togglePinLevel(config->hw.ledpin);
+			blink_delay = TICK_BLINK_RDM;
+		} else {
+			samgpio_setPinLevel(config->hw.ledpin, 1 ^ config->hw.ledinv);
+			blink_delay = TICK_BLINK_DMX;
+		}
+		
+		config->activity = DmxActivity_Idle;
+	}
+}
+
 BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	if(config->hw.module == NULL) {
 		return pdFAIL;
@@ -93,6 +118,9 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	
 	vDmxSetupPins(sercomdevice, config->hw.rxpin, config->hw.txpin, config->hw.pinmux, config->hw.dirpin);
 	
+	samgpio_setPinDirection(config->hw.ledpin, GPIO_DIRECTION_OUT);
+	samgpio_setPinLevel(config->hw.ledpin, 1 ^ config->hw.ledinv);
+	
 	sercomdevice->USART.INTFLAG.reg = 0x00;
 	sercomdevice->USART.INTENCLR.reg = 0xFF;
 	sercomdevice->USART.INTENSET.bit.RXC = 1;
@@ -106,6 +134,8 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	config->currentTxBuffer = NULL;
 	
 	config->lastValidRxBuffer = NULL;
+	
+	xTaskCreate(vDmxTask, "dmx", configMINIMAL_STACK_SIZE, (void*)config, configMAX_PRIORITIES - 3, NULL);
 	
 	sercomdevice->USART.CTRLA.bit.ENABLE = 1;
 	
@@ -192,6 +222,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 						config->currentRxBuffer->dmx[config->currentRxBuffer->slotCount++] = data_byte;
 						if(config->currentRxBuffer->slotCount > DMX_MAX_SLOTS) {
 							vDmxPortPushNewFrame(config);
+							config->activity = DmxActivity_Dmx;
 							config->rxState = DmxState_Idle;
 						}
 					}
@@ -201,6 +232,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 						config->currentRxBuffer->dmx[config->currentRxBuffer->slotCount++] = data_byte;
 						if(config->currentRxBuffer->slotCount >= config->currentRxBuffer->rdm.messageLength + sizeof(RdmChecksum_t) && config->currentRxBuffer->slotCount >= RDM_MINIMUMFRAMELENGTH) {
 							vDmxPortPushNewRdmMessage(config);
+							config->activity = DmxActivity_Rdm;
 							config->rxState = DmxState_Idle;
 						}
 					}
