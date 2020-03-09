@@ -68,15 +68,17 @@ typedef void (*vDmxNewRxFrame)(DmxBuffer_t*);
 typedef void (*vDmxEvent)(void);
 
 typedef struct {
-	struct {
-		void* module;
-		uint32_t rxpin;
-		uint32_t rxfunc;
-		enum SercomPads_e rxpad;
-		uint32_t txpin;
-		uint32_t txfunc;
-		enum SercomPads_e txpad;
-	} hw;
+	void* module;
+	uint32_t rxpin;
+	uint32_t txpin;
+	uint32_t pinmux;
+	uint32_t dirpin;
+	uint32_t ledpin;
+	BaseType_t ledinv;
+} DmxPortHardware_t;
+
+typedef struct {
+	DmxPortHardware_t hw;
 	DmxState_t rxState;
 	DmxState_t txState;
 	uint16_t currentTxSlot;

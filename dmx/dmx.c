@@ -31,27 +31,36 @@ DmxBuffer_t* pDmxPortGetNextBuffer(DmxPortConfig_t* config) {
 	return NULL;
 }
 
-void vDmxSetupPins(Sercom* sercomdevice, enum SercomPads_e rxpad, uint32_t rxfunc, uint32_t rxpin, enum SercomPads_e txpad, uint32_t txfunc, uint32_t txpin) {
+void vDmxSetupPins(Sercom* sercomdevice, uint32_t rxpin, uint32_t txpin, uint8_t pinmux, uint32_t dirpin) {
 	if(sercomdevice->USART.CTRLA.bit.ENABLE) {
 		return;	
 	}
 	
-	if(rxfunc != 0) {
-		int8_t rxbit = xSercomPadToRXPO(rxpad);
+	if(pinmux == 0) {
+		return;
+	}
+	
+	if(rxpin != GPIO_NONE) {
+		int8_t rxbit = xSercomPadToRXPO(eSercomGPIOToPad(rxpin));
 		if(rxbit >= 0) {
 			sercomdevice->USART.CTRLA.bit.RXPO = (uint8_t)rxbit;
-			samgpio_setPinFunction(rxpin, rxfunc);
+			samgpio_setPinFunction(rxpin, pinmux);
 			sercomdevice->USART.CTRLB.bit.RXEN = 1;
 		}
 	}
 	
-	if(txfunc != 0) {
-		int8_t txbit = xSercomPadToTXPO(txpad);
+	if(txpin != GPIO_NONE) {
+		int8_t txbit = xSercomPadToTXPO(eSercomGPIOToPad(txpin));
 		if(txbit >= 0) {
 			sercomdevice->USART.CTRLA.bit.TXPO = (uint8_t)txbit;
-			samgpio_setPinFunction(txpin, txfunc);
+			samgpio_setPinFunction(txpin, pinmux);
 			sercomdevice->USART.CTRLB.bit.TXEN = 1;
 		}
+	}
+	
+	if(dirpin != GPIO_NONE) {
+		samgpio_setPinLevel(dirpin, 0);
+		samgpio_setPinDirection(dirpin, GPIO_DIRECTION_OUT);
 	}
 }
 
@@ -82,7 +91,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	sercomdevice->USART.CTRLB.bit.SBMODE = 0;	// One Stop Bit, to prevent framing error with devices sending short stop bits;
 	sercomdevice->USART.CTRLB.bit.CHSIZE = 0;	// 8-bit Data
 	
-	vDmxSetupPins(sercomdevice, config->hw.rxpad, config->hw.rxfunc, config->hw.rxpin, config->hw.txpad, config->hw.txfunc, config->hw.txpin);
+	vDmxSetupPins(sercomdevice, config->hw.rxpin, config->hw.txpin, config->hw.pinmux, config->hw.dirpin);
 	
 	sercomdevice->USART.INTFLAG.reg = 0x00;
 	sercomdevice->USART.INTENCLR.reg = 0xFF;
@@ -219,7 +228,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 				config->txState = DmxState_StartCode;
 				break;
 			case DmxState_StartCode:
-				samgpio_setPinFunction(config->hw.txpin, config->hw.txfunc);
+				samgpio_setPinFunction(config->hw.txpin, config->hw.pinmux);
 				config->currentTxSlot = 1;
 				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[DMX_STARTCODE_INDEX];
 				config->txState = DmxState_Slots;
@@ -272,9 +281,9 @@ void vDmxSwapRxTxPins(DmxPortConfig_t* config, BaseType_t swap) {
 	sercomdevice->USART.CTRLB.bit.TXEN = 0;
 	
 	if(swap == pdTRUE) {
-		vDmxSetupPins(sercomdevice, config->hw.txpad, config->hw.txfunc, config->hw.txpin, config->hw.rxpad, config->hw.rxfunc, config->hw.rxpin);
+		vDmxSetupPins(sercomdevice, config->hw.txpin, config->hw.txpin, config->hw.pinmux, config->hw.dirpin);
 	} else {
-		vDmxSetupPins(sercomdevice, config->hw.rxpad, config->hw.rxfunc, config->hw.rxpin, config->hw.txpad, config->hw.txfunc, config->hw.txpin);
+		vDmxSetupPins(sercomdevice, config->hw.rxpin, config->hw.rxpin, config->hw.pinmux, config->hw.dirpin);
 	}
 	
 	sercomdevice->USART.CTRLA.bit.ENABLE = 1;
