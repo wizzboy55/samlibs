@@ -22,7 +22,7 @@
 
 #define DMX_DIRPIN_RX 0
 #define DMX_DIRPIN_TX 1
-#define DMX_BREAKCOUNT 4
+#define DMX_BREAKCOUNT 5
 #define DMX_BREAKBYTE 0x00
 
 #define DMX_STARTCODE 0x00
@@ -98,5 +98,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config);
 void vDmxInterruptHandler(DmxPortConfig_t* config);
 BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame);
 void vDmxSwapRxTxPins(DmxPortConfig_t* config, BaseType_t swap);
+DmxBuffer_t* pDmxGetLastValidFrame(DmxPortConfig_t* config);
+void vDmxCopyFrame(DmxBuffer_t* dest, DmxBuffer_t* source);
 
 #endif /* DMX_H_ */

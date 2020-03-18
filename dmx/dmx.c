@@ -67,8 +67,8 @@ void vDmxSetupPins(Sercom* sercomdevice, uint32_t rxpin, uint32_t txpin, uint8_t
 void vDmxTask(void* p) {
 	DmxPortConfig_t* config = (DmxPortConfig_t*)p;
 	
-#define TICK_BLINK_DMX 500 / portTICK_PERIOD_MS
-#define TICK_BLINK_RDM 250 / portTICK_PERIOD_MS
+#define TICK_BLINK_DMX 90 / portTICK_PERIOD_MS
+#define TICK_BLINK_RDM 90 / portTICK_PERIOD_MS
 	
 	TickType_t blink_delay = TICK_BLINK_DMX;
 	
@@ -243,7 +243,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 		}
 	}
 	
-	if(sercomdevice->USART.INTFLAG.bit.TXC) {
+	if(sercomdevice->USART.INTFLAG.bit.TXC || sercomdevice->USART.INTFLAG.bit.DRE) {
 		// Data TX Complete Interrupt
 		sercomdevice->USART.INTFLAG.bit.TXC = 1;
 		switch(config->txState) {
@@ -266,9 +266,11 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 				config->txState = DmxState_Slots;
 				break;
 			case DmxState_Slots:
-				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[config->currentTxSlot++];
+				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[config->currentTxSlot];
 				if(config->currentTxSlot >= config->currentTxBuffer->slotCount) {
 					vDmxEndTransmission(config);
+				} else {
+					config->currentTxSlot++;
 				}
 				break;
 			default:
@@ -291,6 +293,7 @@ BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame) {
 	// Generate break
 	config->txState = DmxState_Break;
 	samgpio_clearPin(config->hw.txpin);
+	samgpio_setPinDirection(config->hw.txpin, GPIO_DIRECTION_OUT);
 	samgpio_setPinFunction(config->hw.txpin, GPIO_PIN_FUNCTION_OFF);
 	config->currentTxSlot = 1;
 	config->currentTxBuffer = frame;
@@ -319,4 +322,17 @@ void vDmxSwapRxTxPins(DmxPortConfig_t* config, BaseType_t swap) {
 	}
 	
 	sercomdevice->USART.CTRLA.bit.ENABLE = 1;
+}
+
+DmxBuffer_t* pDmxGetLastValidFrame(DmxPortConfig_t* config) {
+	return config->lastValidRxBuffer;
+}
+
+void vDmxCopyFrame(DmxBuffer_t* dest, DmxBuffer_t* source) {
+	if(dest == NULL || source == NULL) {
+		return;
+	}
+	memcpy(dest->dmx, source->dmx, source->slotCount);
+	dest->slotCount = source->slotCount;
+	dest->status.valid = 1;
 }
