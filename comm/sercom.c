@@ -7,9 +7,8 @@
 
 #include "sercom.h"
 #include "FreeRTOS.h"
-#include "samgpio.h"
 
-enum SercomPads_e eSercomGPIOToPad(uint32_t gpio) {
+enum SercomPads_e eSercomGPIOToPad(GPIOPin_t gpio) {
 #if defined(SAMC20)
 	switch(gpio) {
 		case GPIO(GPIO_PORTA, 0):
