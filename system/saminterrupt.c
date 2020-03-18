@@ -58,6 +58,16 @@ IRQn_Type sam_getModuleInterrupt(void* const module) {
 				return SERCOM2_IRQn;
 			case (uint32_t)SERCOM3:
 				return SERCOM3_IRQn;
+			case (uint32_t)TC0:
+				return TC0_IRQn;
+			case (uint32_t)TC1:
+				return TC1_IRQn;
+			case (uint32_t)TC2:
+				return TC2_IRQn;
+			case (uint32_t)TC3:
+				return TC3_IRQn;
+			case (uint32_t)TC4:
+				return TC4_IRQn;
 		}
 	#else
 		#error "Device not supported."
