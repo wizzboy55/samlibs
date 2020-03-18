@@ -42,6 +42,7 @@ void vCCLInit(CCLConfig_t* config) {
 	samclk_enable_gclk_channel(CCL, 0);
 	samclk_enable_peripheral_clock(CCL);
 
+	CCL->LUTCTRL[config->module].bit.ENABLE = 0;
 	CCL->LUTCTRL[config->module].bit.TRUTH = config->truthtable;
 	CCL->LUTCTRL[config->module].bit.INSEL0 = config->in0sel;
 	CCL->LUTCTRL[config->module].bit.INSEL1 = config->in1sel;
