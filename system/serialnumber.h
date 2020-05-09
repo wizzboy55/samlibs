@@ -21,7 +21,7 @@ typedef struct {
 	uint32_t word0;
 } serialnumber_t;
 
-serialnumber_t g_serialnumber;
+extern serialnumber_t g_serialnumber;
 uint32_t *g_serialnumber_ptr;
 
 void getSerialNumber(void);

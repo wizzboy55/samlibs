@@ -36,6 +36,12 @@ BaseType_t pwm_init(pwmConfig_t* config) {
 	return pdPASS;
 }
 
+void pwm_setEnable(pwmConfig_t* config, bool enable)
+{
+	Tc* tcdevice = (Tc *)config->module;
+	tcdevice->COUNT32.CTRLA.bit.ENABLE = enable;
+}
+
 uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel) {
 	Tc* tcdevice = (Tc *)config->module;
 	
@@ -56,4 +62,33 @@ uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel) {
 uint8_t* pwm_getPwmPeriodRegister(pwmConfig_t* config) {
 	Tc* tcdevice = (Tc *)config->module;
 	return &(tcdevice->COUNT8.PER.reg);
+}
+
+// Set PWM duty cycle for specified channel
+//	- duty_16bit : 0xFFFF == 100%, 0 = 0%
+void pwm_setDutyCycle(pwmConfig_t* config, uint8_t channel, uint16_t duty_16bit) {
+	Tc* tcdevice = (Tc *)config->module;
+	
+	if(channel == 0 || channel == 1) {
+		switch(config->counterWidth) {
+			case PWM_COUNT8:
+			{
+				uint8_t period = tcdevice->COUNT8.PER.reg;
+				uint8_t compare = (uint32_t)duty_16bit * period / 0xFFFF;
+				tcdevice->COUNT8.CC[channel].reg = compare;
+			}
+				break;
+			case PWM_COUNT16:
+				tcdevice->COUNT16.CC[channel].reg = duty_16bit;
+				break;
+			case PWM_COUNT32:
+				if(duty_16bit == 0)
+					tcdevice->COUNT32.CC[channel].reg = 0; // 0%
+				else if(duty_16bit == 0xFFFF)
+					tcdevice->COUNT32.CC[channel].reg = 0xFFFFFFFF; // 100%
+				else
+					tcdevice->COUNT32.CC[channel].reg = ((uint32_t)duty_16bit << 16) | 0x7FFF; // Fit it on 32 bits
+				break;
+		}
+	}
 }

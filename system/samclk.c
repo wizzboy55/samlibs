@@ -363,7 +363,7 @@ void samclk_enable_gclk_channel(const void *const module, const uint8_t source) 
 	#if defined(SAME54) || defined(SAME53)
 		GCLK->PCHCTRL[channel].reg = (source | GCLK_PCHCTRL_CHEN);
 	#elif defined SAMD20
-		GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(channel) | GCLK_CLKCTRL_GEN(source) | GCLK_CLKCTRL_CLKEN);
+		GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(channel) | GCLK_CLKCTRL_GEN(source) | GCLK_CLKCTRL_CLKEN;
 	#elif defined SAMC20
 		if(source < 9) {
 			GCLK->GENCTRL[source].bit.GENEN = 1;

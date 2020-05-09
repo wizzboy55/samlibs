@@ -11,6 +11,7 @@
 
 #include "FreeRTOS.h"
 #include <stdint.h>
+#include <stdbool.h>
 #include "samgpio.h"
 
 typedef enum {PWM_COUNT16 = 0, PWM_COUNT8, PWM_COUNT32} PWMCounterWidth_t;
@@ -25,5 +26,8 @@ typedef struct {
 
 BaseType_t pwm_init(pwmConfig_t* config);
 uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel);
+
+void pwm_setDutyCycle(pwmConfig_t* config, uint8_t channel, uint16_t duty_16bit);
+void pwm_setEnable(pwmConfig_t* config, bool enable);
 
 #endif /* PWM_H_ */
