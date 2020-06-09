@@ -117,4 +117,28 @@ int8_t xSercomPadToDOPO(enum SercomPads_e pad_do, enum SercomPads_e pad_clk) {
 			}
 	};
 };
+
+inline uint8_t uSercomDataOrderToRegister(enum SercomDataOrder_e dataOrder) {
+	return dataOrder == LSBFirst;
+}
+
+inline uint8_t uSercomParityToFrameFormat(enum SercomParity_e parity) {
+	switch(parity) {
+		case NoParity:
+		default:
+			return 0x00;
+		case EvenParity:
+		case OddParity:
+			return 0x01;
+	}
+}
+
+inline uint8_t uSercomParityToRegister(enum SercomParity_e parity) {
+	switch(parity) {
+		case EvenParity:
+		default:
+			return 0x00;
+		case OddParity:
+			return 0x01;
+	}
 }
