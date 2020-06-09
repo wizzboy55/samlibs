@@ -75,10 +75,10 @@ void vDmxTask(void* p) {
 	for(;;) {
 		vTaskDelay(blink_delay);
 		if(config->activity == DmxActivity_Dmx) {
-			samgpio_togglePinLevel(config->hw.ledpin);
+			samgpio_togglePinLevelFast(config->hw.ledpin);
 			blink_delay = TICK_BLINK_DMX;
 		} else if(config->activity == DmxActivity_Rdm) {
-			samgpio_togglePinLevel(config->hw.ledpin);
+			samgpio_togglePinLevelFast(config->hw.ledpin);
 			blink_delay = TICK_BLINK_RDM;
 		} else {
 			samgpio_setPinLevel(config->hw.ledpin, 1 ^ config->hw.ledinv);
@@ -255,7 +255,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 				}
 				break;
 			case DmxState_Mark:
-				samgpio_setPin(config->hw.txpin);
+				samgpio_setPinFast(config->hw.txpin);
 				sercomdevice->USART.DATA.reg = DMX_BREAKBYTE;
 				config->txState = DmxState_StartCode;
 				break;
@@ -292,7 +292,7 @@ BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame) {
 	
 	// Generate break
 	config->txState = DmxState_Break;
-	samgpio_clearPin(config->hw.txpin);
+	samgpio_clearPinFast(config->hw.txpin);
 	samgpio_setPinDirection(config->hw.txpin, GPIO_DIRECTION_OUT);
 	samgpio_setPinFunction(config->hw.txpin, GPIO_PIN_FUNCTION_OFF);
 	config->currentTxSlot = 1;
