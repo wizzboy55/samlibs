@@ -22,12 +22,24 @@ enum SercomParity_e {EvenParity = 0, OddParity = 1, NoParity = 2};
 enum SercomStopBits_e {OneStopBit = 0, TwoStopBit = 1};
 	
 enum SercomCharacterSize_e {Char8bit = 0, Char9bit = 1, Char5bit = 5, Char6bit = 6, Char7bit = 7};
+
+typedef struct {
+	void* module;
+	GPIOPin_t pin_mosi;
+	GPIOPin_t pin_miso;
+	GPIOPin_t pin_clk;
+	GPIOPin_t pin_cs;
+	PinMux_t pinmux_sercom;
+	uint32_t baud;
+} SercomSpiHwConfig_t;
+
 enum SercomPads_e eSercomGPIOToPad(GPIOPin_t gpio);
 int8_t xSercomPadToRXPO(enum SercomPads_e pad);
 int8_t xSercomPadToTXPO(enum SercomPads_e pad);
 int8_t xSercomPadToDIPO(enum SercomPads_e pad);
 int8_t xSercomPadToDOPO(enum SercomPads_e pad_do, enum SercomPads_e pad_clk);
 int8_t xSercomDOPOToDIPO(int8_t dopo);
+uint16_t ulSercomBaudrateToRegisterArithmetic(uint32_t baudrate);
 uint8_t uSercomDataOrderToRegister(enum SercomDataOrder_e dataOrder);
 uint8_t uSercomParityToFrameFormat(enum SercomParity_e parity);
 uint8_t uSercomParityToRegister(enum SercomParity_e parity);

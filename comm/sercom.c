@@ -118,6 +118,10 @@ int8_t xSercomPadToDOPO(enum SercomPads_e pad_do, enum SercomPads_e pad_clk) {
 	};
 };
 
+inline uint16_t ulSercomBaudrateToRegisterArithmetic(uint32_t baudrate) {
+	return (65536 - ((65536 * 16.0f * baudrate) / CONF_CPU_FREQUENCY));
+}
+
 inline uint8_t uSercomDataOrderToRegister(enum SercomDataOrder_e dataOrder) {
 	return dataOrder == LSBFirst;
 }
