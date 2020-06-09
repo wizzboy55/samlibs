@@ -10,6 +10,10 @@
 #include "debug_interface.h"
 
 void samgpio_setPinFunction(const GPIOPin_t gpio, const PinMux_t function) {
+	if(gpio == GPIO_NONE) {
+		return;
+	}
+	
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -30,6 +34,10 @@ void samgpio_setPinFunction(const GPIOPin_t gpio, const PinMux_t function) {
 }
 
 void samgpio_setPinDirection(const GPIOPin_t gpio, const enum gpio_direction direction) {
+	if(gpio == GPIO_NONE) {
+		return;
+	}
+	
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -55,6 +63,10 @@ void samgpio_setPinDirection(const GPIOPin_t gpio, const enum gpio_direction dir
 }
 
 void samgpio_setPinLevel(const GPIOPin_t gpio, const uint8_t level) {
+	if(gpio == GPIO_NONE) {
+		return;
+	}
+	
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
