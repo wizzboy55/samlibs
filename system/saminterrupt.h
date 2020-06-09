@@ -22,5 +22,7 @@ typedef void (*InterruptHandler_t)(void);
 
 void sam_enableModuleInterrupt(void* const module);
 void sam_disableModuleInterrupt(void* const module);
+void sam_clearPendingModuleInterrupt(void* const module);
+void sam_setModuleInterruptPriority(void* const module, uint32_t priority);
 
 #endif /* SAMINTERRUPT_H_ */
