@@ -38,7 +38,7 @@ enum SercomPads_e eSercomGPIOToPad(GPIOPin_t gpio) {
 		case GPIO(GPIO_PORTA, 31):
 			return PAD3;
 		default:
-			return -1;
+			return PADNONE;
 	}
 #endif
 }
@@ -67,4 +67,54 @@ int8_t xSercomPadToTXPO(enum SercomPads_e pad) {
 		default:
 			return -1;
 	}
+}
+
+int8_t xSercomPadToDIPO(enum SercomPads_e pad) {
+	return xSercomPadToRXPO(pad);
+};
+
+int8_t xSercomDOPOToDIPO(int8_t dopo) {
+	switch(dopo) {
+		case 0:
+			return 3;
+		case 1:
+			return 0;
+		case 2:
+			return 0;
+		case 3:
+			return 2;
+		default:
+			return -1;
+	}
+}
+
+int8_t xSercomPadToDOPO(enum SercomPads_e pad_do, enum SercomPads_e pad_clk) {
+	switch(pad_do) {
+		case PAD0:
+			switch(pad_clk) {
+				case PAD1:
+					return 0;
+				case PAD3:
+					return 3;
+				default:
+					return -1;
+			}
+		default:
+		case PAD1:
+			return -1;
+		case PAD2:
+			return 1;
+		case PAD3:
+			return 2;
+		case PADNONE:
+			switch(pad_clk) {
+				case PAD1:
+					return 0;
+				case PAD3:
+					return 1;
+				default:
+					return -1;
+			}
+	};
+};
 }
