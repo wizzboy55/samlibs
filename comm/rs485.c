@@ -44,7 +44,7 @@ BaseType_t xRs485Init(Rs485Config_t* config) {
 		samgpio_setPinFunction(config->rxpin, config->pinmux);
 		samgpio_setPinPullMode(config->rxpin, GPIO_PULL_UP);
 		sercomdevice->USART.CTRLB.bit.RXEN = 1;
-		sercomdevice->USART.INTENSET.bit.RXC = 1;
+		sercomdevice->USART.INTENSET.reg = SERCOM_USART_INTENSET_RXC;
 	} else {
 		return pdFAIL;
 	}
@@ -80,7 +80,7 @@ BaseType_t xRs485Init(Rs485Config_t* config) {
 		dump++;
 	}
 	
-	sercomdevice->USART.INTENSET.bit.ERROR = 1;
+	sercomdevice->USART.INTENSET.reg = SERCOM_USART_INTENSET_ERROR;
 	
 	sercomdevice->USART.CTRLA.bit.ENABLE = 1;
 	
@@ -170,12 +170,6 @@ void vRs485ClearLinkLed(Rs485Config_t* config) {
 	}
 }
 
-inline void vSetRxInterruptFlag(Sercom *sercomdevice) {
-	if(sercomdevice->USART.INTENSET.bit.RXC == 0) {
-		sercomdevice->USART.INTENSET.bit.RXC = 1;
-	}	
-}
-
 BaseType_t xRs485SendMessage(Rs485Status_t* status, uint8_t* message, Rs485Size_t size, TickType_t timeout) {
 	if(status == NULL) {
 		return pdFAIL;
@@ -199,16 +193,11 @@ BaseType_t xRs485SendMessage(Rs485Status_t* status, uint8_t* message, Rs485Size_
 	} else {
 		sercomdevice->USART.DATA.reg = message[0];
 	}
-	sercomdevice->USART.INTFLAG.bit.TXC = 1;
-	sercomdevice->USART.INTENSET.bit.DRE = 1;
-	
+	sercomdevice->USART.INTFLAG.reg = SERCOM_USART_INTFLAG_TXC;
+	sercomdevice->USART.INTENSET.reg = SERCOM_USART_INTENSET_DRE;
 	BaseType_t res = xTaskNotifyWait(0, 0, NULL, timeout);
 	
-	sercomdevice->USART.INTENCLR.bit.DRE = 1;
-	sercomdevice->USART.INTENCLR.bit.TXC = 1;
-	
-	// Force re-enabling as RXC can be disabled by two previous lines...
-	vSetRxInterruptFlag(sercomdevice);
+	sercomdevice->USART.INTENCLR.reg = SERCOM_USART_INTENCLR_TXC || SERCOM_USART_INTENCLR_DRE;
 	
 	return res;
 }
@@ -224,11 +213,9 @@ inline void vRs485InterruptHandler(Rs485Status_t* status) {
 	
 	Sercom* sercomdevice = (Sercom*)status->config->module;
 	
-	sercomdevice->USART.INTENSET.bit.RXC = 1;
-	
 	while(sercomdevice->USART.INTFLAG.bit.ERROR) {
 		sercomdevice->USART.STATUS.reg = 0xFF;
-		sercomdevice->USART.INTFLAG.bit.ERROR = 1;
+		sercomdevice->USART.INTFLAG.reg = SERCOM_USART_INTFLAG_ERROR;
 	}
 	
 	while(sercomdevice->USART.INTFLAG.bit.RXC) {
@@ -254,21 +241,18 @@ inline void vRs485InterruptHandler(Rs485Status_t* status) {
 			sercomdevice->USART.DATA.reg = status->txBuffer[status->txBufferIndex++];
 		} 
 		if(status->txBufferIndex >= status->txBufferSize) {
-			sercomdevice->USART.INTENCLR.bit.DRE = 1;
-			sercomdevice->USART.INTENSET.bit.TXC = 1;
+			sercomdevice->USART.INTENCLR.reg = SERCOM_USART_INTENCLR_DRE;
+			sercomdevice->USART.INTENSET.reg = SERCOM_USART_INTENSET_TXC;
 		}
 	}
 	
 	if(sercomdevice->USART.INTFLAG.bit.TXC && sercomdevice->USART.INTENSET.bit.TXC) {
 		sercomdevice->USART.INTFLAG.bit.TXC = 1;
 		if(status->txBufferIndex >= status->txBufferSize) {
-			sercomdevice->USART.INTENCLR.bit.TXC = 1;
-			sercomdevice->USART.INTENCLR.bit.DRE = 1;
+			sercomdevice->USART.INTENCLR.reg = SERCOM_USART_INTENCLR_TXC || SERCOM_USART_INTENCLR_DRE;
 			sercomdevice->USART.CTRLB.bit.TXEN = 0;
-			vSetRxInterruptFlag(sercomdevice);
 			samgpio_setPinFunction(status->config->rxpin, status->config->pinmux);
 			vTaskNotifyGiveFromISR(status->txTask, NULL);
-			vSetRxInterruptFlag(sercomdevice);
 		}
 	}
 }
