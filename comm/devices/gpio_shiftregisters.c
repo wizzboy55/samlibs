@@ -53,7 +53,6 @@ BaseType_t xGpioShiftRegistersPush(GpioShiftRegistersConfig_t* config, const uin
 	GPIOPin_t gpio_miso = config->hw.gpio_miso;
 	GPIOPin_t gpio_mosi = config->hw.gpio_mosi;
 	
-	CRITICAL_SECTION_ENTER();
 	if(readMessage != NULL) {
 		GPIOSR_CSDOWN;
 		GPIOSR_CSUP;
@@ -83,7 +82,6 @@ BaseType_t xGpioShiftRegistersPush(GpioShiftRegistersConfig_t* config, const uin
 		GPIOSR_CSUP;
 		GPIOSR_CSDOWN;
 	}
-	CRITICAL_SECTION_LEAVE();
 	
 	return pdPASS;
 }
