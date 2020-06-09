@@ -31,7 +31,7 @@ BaseType_t xSpiRegistersInitHardware(SpiShiftRegistersConfig_t* config) {
 	sercomdevice->SPI.CTRLB.bit.CHSIZE = 0x00;
 	sercomdevice->SPI.CTRLA.bit.DORD = config->dataOrder;
 	sercomdevice->SPI.CTRLB.bit.MSSEN = 0;
-	sercomdevice->SPI.BAUD.reg = (CONF_CPU_FREQUENCY / (2 * config->hw.baud)) - 1;
+	sercomdevice->SPI.BAUD.reg = uSercomBaudrateToRegisterSynchronous(config->hw.baud);
 	sercomdevice->SPI.CTRLA.bit.CPHA = 0;
 	sercomdevice->SPI.CTRLA.bit.CPOL = 0;
 	sercomdevice->SPI.CTRLB.bit.RXEN = 1;
