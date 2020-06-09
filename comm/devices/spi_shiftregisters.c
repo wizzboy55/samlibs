@@ -132,10 +132,8 @@ void vSpiRegistersReadWriteRegistersAsync(SpiShiftRegistersConfig_t* config, uin
 	config->currentWriteIndex = 0;
 	config->task = task;
 	
-	samgpio_setPinLevel(GPIO(GPIO_PORTA, 15), 0);
-	samgpio_setPinLevel(config->hw.pin_cs, 0);
-	samgpio_setPinLevel(config->hw.pin_cs, 1);
-	samgpio_setPinLevel(GPIO(GPIO_PORTA, 15), 1);
+	samgpio_setPinLevel(config->hw.pin_cs, config->latchPolarity == LatchHigh);
+	samgpio_setPinLevel(config->hw.pin_cs, config->latchPolarity == LatchLow);
 
 	sam_clearPendingModuleInterrupt(config->hw.module);
 	sam_enableModuleInterrupt(config->hw.module);
@@ -146,35 +144,21 @@ void vSpiRegistersReadWriteRegistersAsync(SpiShiftRegistersConfig_t* config, uin
 		sercomdevice->SPI.DATA.reg = config->currentWriteMessage[config->currentWriteIndex++];
 	}
 	
-	sercomdevice->SPI.INTENSET.bit.RXC = 1;
-	sercomdevice->SPI.INTENSET.bit.TXC = 1;
+	sercomdevice->SPI.INTENSET.reg = SERCOM_SPI_INTENSET_RXC | SERCOM_SPI_INTENSET_DRE;
+	
+	sercomdevice->SPI.INTENCLR.reg = SERCOM_SPI_INTENCLR_RXC;
 }
 
 void vSpiRegistersSpiInterruptHandler(SpiShiftRegistersConfig_t* config) {
 	Sercom* sercomdevice = (Sercom *)config->hw.module;
 	
-	if(sercomdevice->SPI.INTFLAG.bit.TXC) {
-		if(config->currentWriteIndex < config->currentMessageSize) {
-			if(config->currentWriteMessage == NULL) {
-				sercomdevice->SPI.DATA.reg = config->currentWriteIndex++;
-			} else {
-				sercomdevice->SPI.DATA.reg = config->currentWriteMessage[config->currentWriteIndex++];
-			}
-		} else {
-			samgpio_setPinLevel(GPIO(GPIO_PORTA, 15), 0);
-			samgpio_setPinLevel(config->hw.pin_cs, 0);
-			samgpio_setPinLevel(config->hw.pin_cs, 1);
-			samgpio_setPinLevel(GPIO(GPIO_PORTA, 15), 1);
-		}
-		sercomdevice->SPI.INTFLAG.bit.TXC = 1;
-	}
-	
-	if(sercomdevice->SPI.INTFLAG.bit.RXC) {
+	while(sercomdevice->SPI.INTFLAG.bit.RXC) {
 		if(config->currentReadIndex < config->currentMessageSize) {
 			if(config->currentReadMessage != NULL) {
 				config->currentReadMessage[config->currentReadIndex++] = sercomdevice->SPI.DATA.reg;
-				if(config->currentReadIndex >= config->currentMessageSize) {
+				if(config->currentReadIndex >= config->currentMessageSize && config->task != NULL) {
 					vTaskNotifyGiveFromISR(config->task, NULL);
+					sercomdevice->SPI.INTENCLR.reg = SERCOM_SPI_INTENCLR_RXC;
 				}
 			} else {
 				uint8_t dump = sercomdevice->SPI.DATA.reg;
@@ -182,6 +166,26 @@ void vSpiRegistersSpiInterruptHandler(SpiShiftRegistersConfig_t* config) {
 				dump++;
 			}
 		}
-		sercomdevice->SPI.INTFLAG.bit.RXC = 1;
+	}
+	
+	while(sercomdevice->SPI.INTFLAG.bit.DRE && sercomdevice->SPI.INTENSET.bit.DRE) {
+		if(config->currentWriteIndex < config->currentMessageSize) {
+			if(config->currentWriteMessage == NULL) {
+				sercomdevice->SPI.DATA.reg = config->currentWriteIndex++;
+			} else {
+				sercomdevice->SPI.DATA.reg = config->currentWriteMessage[config->currentWriteIndex++];
+			}
+		} else {
+			sercomdevice->SPI.INTENCLR.reg = SERCOM_SPI_INTENCLR_DRE;
+			sercomdevice->SPI.INTENSET.reg = SERCOM_SPI_INTENSET_TXC;
+			break;
+		}
+	}
+	
+	if(sercomdevice->SPI.INTFLAG.bit.TXC) {
+		samgpio_setPinLevel(config->hw.pin_cs, config->latchPolarity == LatchHigh);
+		samgpio_setPinLevel(config->hw.pin_cs, config->latchPolarity == LatchLow);
+		sercomdevice->SPI.INTFLAG.reg = SERCOM_SPI_INTFLAG_TXC;
+		sercomdevice->SPI.INTENCLR.reg = SERCOM_SPI_INTENCLR_TXC;
 	}
 }

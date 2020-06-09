@@ -13,8 +13,11 @@
 #include "task.h"
 #include "sercom.h"
 
+enum SpiShiftRegistersLatchPolarity_e {LatchLow = 0, LatchHigh = 1};
+
 typedef struct {
 	SercomSpiHwConfig_t hw;
+	enum SpiShiftRegistersLatchPolarity_e latchPolarity;
 	enum SercomDataOrder_e dataOrder;
 	uint8_t isInit;
 	uint8_t* currentWriteMessage;
