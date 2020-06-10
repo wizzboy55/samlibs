@@ -186,7 +186,7 @@ BaseType_t xRs485SendMessage(Rs485Status_t* status, uint8_t* message, Rs485Size_
 	status->txBufferIndex = 1;
 	
 	sercomdevice->USART.CTRLB.bit.TXEN = 1;
-	samgpio_setPinFunction(status->config->rxpin, GPIO_PIN_FUNCTION_OFF);
+	samgpio_setPinFunction(status->config->rxpin, GPIO_PIN_FUNCTION_OFF); // Prevent spurious reception when no external pull-up is present
 	
 	if(status->config->characterSize == Char9bit) {
 		sercomdevice->USART.DATA.reg = RS485_ADDRESSMASK | message[0];
@@ -230,7 +230,6 @@ inline void vRs485InterruptHandler(Rs485Status_t* status) {
 		if(status->rxBufferIndex == status->rxBufferSize) {
 			if(status->rxQueue != NULL) {
 				xQueueSendToBackFromISR(status->rxQueue, status->rxBuffer, NULL);
-				samgpio_togglePinLevelFast(status->config->ledpin);
 			}
 			status->rxBufferIndex++;
 		}
@@ -251,7 +250,7 @@ inline void vRs485InterruptHandler(Rs485Status_t* status) {
 		if(status->txBufferIndex >= status->txBufferSize) {
 			sercomdevice->USART.INTENCLR.reg = SERCOM_USART_INTENCLR_TXC || SERCOM_USART_INTENCLR_DRE;
 			sercomdevice->USART.CTRLB.bit.TXEN = 0;
-			samgpio_setPinFunction(status->config->rxpin, status->config->pinmux);
+			samgpio_setPinFunction(status->config->rxpin, status->config->pinmux); // Prevent spurious reception when no external pull-up is present
 			vTaskNotifyGiveFromISR(status->txTask, NULL);
 		}
 	}
