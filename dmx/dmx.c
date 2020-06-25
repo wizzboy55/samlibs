@@ -303,6 +303,9 @@ BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame) {
 		return pdFAIL;
 	}
 	
+	if(frame == NULL) {
+		return pdFAIL;
+	}
 	
 	frame->status.read = 1;
 	// Generate break
