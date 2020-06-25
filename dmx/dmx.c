@@ -122,7 +122,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	sercomdevice->USART.CTRLA.bit.MODE = 0x01;
 	
 	sercomdevice->USART.CTRLB.bit.PMODE = 0;	// No Parity
-	sercomdevice->USART.CTRLB.bit.SBMODE = 0;	// One Stop Bit, to prevent framing error with devices sending short stop bits;
+	sercomdevice->USART.CTRLB.bit.SBMODE = 1;	// Two Stop-Bits
 	sercomdevice->USART.CTRLB.bit.CHSIZE = 0;	// 8-bit Data
 	
 	vDmxSetupPins(sercomdevice, config->hw.rxpin, config->hw.txpin, config->hw.pinmux, config->hw.dirpin);
