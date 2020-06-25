@@ -20,11 +20,13 @@ typedef uint32_t PinMux_t;
 void samgpio_setPinFunction(const GPIOPin_t gpio, const PinMux_t function);
 void samgpio_setPinDirection(const GPIOPin_t gpio, const enum gpio_direction direction);
 void samgpio_setPinLevel(const GPIOPin_t gpio, const uint8_t level);
-void samgpio_setPin(const GPIOPin_t gpio);
-void samgpio_clearPin(const GPIOPin_t gpio);
-void samgpio_togglePinLevel(const GPIOPin_t gpio);
+void samgpio_setPinLevelFast(const GPIOPin_t gpio, const uint8_t level);
+void samgpio_setPinFast(const GPIOPin_t gpio);
+void samgpio_clearPinFast(const GPIOPin_t gpio);
+void samgpio_togglePinLevelFast(const GPIOPin_t gpio);
 void samgpio_setPinPullMode(const GPIOPin_t gpio, const enum gpio_pull_mode pull_mode);
 uint8_t samgpio_getPinLevel(const GPIOPin_t gpio);
+uint8_t samgpio_getPinLevelFast(const GPIOPin_t gpio);
 PinMux_t samgpio_getModulePinmux(const void* module);
 
 #endif /* SAMGPIO_H_ */

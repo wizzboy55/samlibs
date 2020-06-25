@@ -10,6 +10,10 @@
 #include "debug_interface.h"
 
 void samgpio_setPinFunction(const GPIOPin_t gpio, const PinMux_t function) {
+	if(gpio == GPIO_NONE) {
+		return;
+	}
+	
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -30,6 +34,10 @@ void samgpio_setPinFunction(const GPIOPin_t gpio, const PinMux_t function) {
 }
 
 void samgpio_setPinDirection(const GPIOPin_t gpio, const enum gpio_direction direction) {
+	if(gpio == GPIO_NONE) {
+		return;
+	}
+	
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -55,6 +63,10 @@ void samgpio_setPinDirection(const GPIOPin_t gpio, const enum gpio_direction dir
 }
 
 void samgpio_setPinLevel(const GPIOPin_t gpio, const uint8_t level) {
+	if(gpio == GPIO_NONE) {
+		return;
+	}
+	
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -67,30 +79,43 @@ void samgpio_setPinLevel(const GPIOPin_t gpio, const uint8_t level) {
 	CRITICAL_SECTION_LEAVE()
 }
 
-void samgpio_setPin(const GPIOPin_t gpio) {
+inline void samgpio_setPinLevelFast(const GPIOPin_t gpio, const uint8_t level) {
+	uint8_t port = GPIO_PORT(gpio);
+	uint8_t pin  = GPIO_PIN(gpio);
+
+	if(level) {
+		PORT->Group[port].OUTSET.reg = (1<<pin);
+		} else {
+		PORT->Group[port].OUTCLR.reg = (1<<pin);
+	}
+}
+
+inline void samgpio_setPinFast(const GPIOPin_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
 	PORT->Group[port].OUTSET.reg = (1<<pin);
 }
 
-void samgpio_clearPin(const GPIOPin_t gpio) {
+inline void samgpio_clearPinFast(const GPIOPin_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
 	PORT->Group[port].OUTCLR.reg = (1<<pin);
 }
 
-void samgpio_togglePinLevel(const GPIOPin_t gpio) {
+inline void samgpio_togglePinLevelFast(const GPIOPin_t gpio) {
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
-	CRITICAL_SECTION_ENTER()
 	PORT->Group[port].OUTTGL.reg = (1<<pin);
-	CRITICAL_SECTION_LEAVE()
 }
 
 void samgpio_setPinPullMode(const GPIOPin_t gpio, const enum gpio_pull_mode pull_mode) {
+	if(gpio == GPIO_NONE) {
+		return;
+	}	
+
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin  = GPIO_PIN(gpio);
 
@@ -114,6 +139,23 @@ void samgpio_setPinPullMode(const GPIOPin_t gpio, const enum gpio_pull_mode pull
 }
 
 uint8_t samgpio_getPinLevel(const GPIOPin_t gpio) {
+	if(gpio == GPIO_NONE) {
+		return 0;
+	}
+	
+	uint8_t port = GPIO_PORT(gpio);
+	uint8_t pin = GPIO_PIN(gpio);
+	uint32_t pinoffset  = (1<<pin);
+	
+	if(PORT->Group[port].PINCFG[pin].bit.INEN) {
+		return (PORT->Group[port].IN.reg & pinoffset) > 0;
+	} else {
+		return (PORT->Group[port].OUT.reg & pinoffset) > 0;
+	}
+}
+
+inline uint8_t samgpio_getPinLevelFast(const GPIOPin_t gpio) {
+	
 	uint8_t port = GPIO_PORT(gpio);
 	uint8_t pin = GPIO_PIN(gpio);
 	uint32_t pinoffset  = (1<<pin);

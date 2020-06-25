@@ -71,11 +71,11 @@ typedef void (*vDmxEvent)(void);
 
 typedef struct {
 	void* module;
-	uint32_t rxpin;
-	uint32_t txpin;
-	uint32_t pinmux;
-	uint32_t dirpin;
-	uint32_t ledpin;
+	GPIOPin_t rxpin;
+	GPIOPin_t txpin;
+	PinMux_t pinmux;
+	GPIOPin_t dirpin;
+	GPIOPin_t ledpin;
 	BaseType_t ledinv;
 } DmxPortHardware_t;
 
