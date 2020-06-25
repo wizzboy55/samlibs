@@ -87,7 +87,6 @@ eEICChannels_t sam_getGPIOEICChannel(GPIOPin_t gpio) {
 #if defined (EIC_SINGLECHANNELINTERRUPT)
 
 void sam_EICSetCallback(eEICChannels_t channel, EICCallback_t cb) {
-	sam_EICInit(0);
 	eicCallbacks[channel] = cb;
 }
 
