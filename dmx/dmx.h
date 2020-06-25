@@ -56,7 +56,8 @@ typedef struct {
 	};
 	uint16_t slotCount;
 	struct {
-		uint8_t used:1;
+		uint8_t read:1;
+		uint8_t written:1;
 		uint8_t valid:1;
 	} status;
 } DmxBuffer_t;

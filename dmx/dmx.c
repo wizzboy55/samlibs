@@ -20,9 +20,18 @@
 
 DmxBuffer_t* pDmxPortGetNextBuffer(DmxPortConfig_t* config) {
 	for(uint8_t i = 0; i < DMX_BUFFERING; i++) {
-		if(config->rxBuffers[i].status.used == 0 && config->rxBuffers[i].status.valid == 0) {
+		if(config->rxBuffers[i].status.written == 0 && config->rxBuffers[i].status.read == 0 && config->rxBuffers[i].status.valid == 0) {
 			DmxBuffer_t* nextBuffer = &(config->rxBuffers[i]);
-			nextBuffer->status.used = 1;
+			nextBuffer->status.written = 1;
+			nextBuffer->slotCount = 0;
+			return nextBuffer;
+		}
+	}
+	// No buffer was found, lower criteria
+	for(uint8_t i = 0; i < DMX_BUFFERING; i++) {
+		if(config->rxBuffers[i].status.written == 0 && config->rxBuffers[i].status.read == 0) {
+			DmxBuffer_t* nextBuffer = &(config->rxBuffers[i]);
+			nextBuffer->status.written = 1;
 			nextBuffer->slotCount = 0;
 			return nextBuffer;
 		}
@@ -145,7 +154,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 }
 
 inline void vDmxPortPushNewFrame(DmxPortConfig_t* config) {
-	config->currentRxBuffer->status.used = 0;
+	config->currentRxBuffer->status.written = 0;
 	config->currentRxBuffer->status.valid = 1;
 	config->lastValidRxBuffer = config->currentRxBuffer;
 	config->currentRxBuffer = pDmxPortGetNextBuffer(config);
@@ -155,7 +164,7 @@ inline void vDmxPortPushNewFrame(DmxPortConfig_t* config) {
 }
 
 inline void vDmxPortPushNewRdmMessage(DmxPortConfig_t* config) {
-	config->currentRxBuffer->status.used = 0;
+	config->currentRxBuffer->status.written = 0;
 	config->currentRxBuffer->status.valid = 1;
 	config->lastValidRxBuffer = config->currentRxBuffer;
 	config->currentRxBuffer = pDmxPortGetNextBuffer(config);
@@ -169,6 +178,10 @@ void vDmxEndTransmission(DmxPortConfig_t* config) {
 	
 	sercomdevice->USART.INTENCLR.reg = SERCOM_USART_INTENCLR_DRE | SERCOM_USART_INTENCLR_TXC;
 	config->txState = DmxState_Idle;
+	if(config->currentTxBuffer != NULL) {
+		config->currentTxBuffer->status.valid = 0;
+		config->currentTxBuffer->status.read = 0;
+	}
 }
 
 inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
@@ -290,6 +303,8 @@ BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame) {
 		return pdFAIL;
 	}
 	
+	
+	frame->status.read = 1;
 	// Generate break
 	config->txState = DmxState_Break;
 	samgpio_clearPin(config->hw.txpin);
@@ -332,7 +347,9 @@ void vDmxCopyFrame(DmxBuffer_t* dest, DmxBuffer_t* source) {
 	if(dest == NULL || source == NULL) {
 		return;
 	}
+	dest->status.written = 1;
 	memcpy(dest->dmx, source->dmx, source->slotCount);
 	dest->slotCount = source->slotCount;
 	dest->status.valid = 1;
+	dest->status.written = 0;
 }
