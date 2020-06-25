@@ -191,7 +191,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 	
 	Sercom* sercomdevice = (Sercom *)config->hw.module;
 	
-	if(sercomdevice->USART.INTFLAG.bit.RXC) {
+	while(sercomdevice->USART.INTFLAG.bit.RXC) {
 		// RX Complete Interrupt
 		uint8_t data_byte = sercomdevice->USART.DATA.reg;
 		
@@ -202,10 +202,10 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 		if(sercomdevice->USART.STATUS.bit.BUFOVF) {
 			// Overflow
 			// Reset port since data is invalid
-			sercomdevice->USART.STATUS.bit.BUFOVF = 1;
+			sercomdevice->USART.STATUS.reg = SERCOM_USART_STATUS_BUFOVF;
 		} else if(sercomdevice->USART.STATUS.bit.FERR) {
 			// Framing Error = Break Condition
-			sercomdevice->USART.STATUS.bit.FERR = 1;
+			sercomdevice->USART.STATUS.reg = SERCOM_USART_STATUS_FERR;
 			if(config->currentRxBuffer->slotCount != 0) {
 				// Incomplete frame received
 				vDmxPortPushNewFrame(config);
@@ -256,9 +256,8 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 		}
 	}
 	
-	if(sercomdevice->USART.INTFLAG.bit.TXC || sercomdevice->USART.INTFLAG.bit.DRE) {
+	if(sercomdevice->USART.INTFLAG.bit.TXC && sercomdevice->USART.INTENSET.bit.TXC) {
 		// Data TX Complete Interrupt
-		sercomdevice->USART.INTFLAG.bit.TXC = 1;
 		switch(config->txState) {
 			case DmxState_Break:
 				sercomdevice->USART.DATA.reg = DMX_BREAKBYTE;
@@ -277,13 +276,21 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 				config->currentTxSlot = 1;
 				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[DMX_STARTCODE_INDEX];
 				config->txState = DmxState_Slots;
+				sercomdevice->USART.INTENSET.reg = SERCOM_USART_INTENSET_DRE;
+				sercomdevice->USART.INTENCLR.reg = SERCOM_USART_INTENCLR_TXC;
 				break;
+			default:
+				vDmxEndTransmission(config);
+		}
+	}
+	
+	while(sercomdevice->USART.INTFLAG.bit.DRE && sercomdevice->USART.INTENSET.bit.DRE) {
+		// Data TX Register Empty Interrupt
+		switch(config->txState) {
 			case DmxState_Slots:
-				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[config->currentTxSlot];
-				if(config->currentTxSlot >= config->currentTxBuffer->slotCount) {
+				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[config->currentTxSlot++];
+				if(config->currentTxSlot > config->currentTxBuffer->slotCount) {
 					vDmxEndTransmission(config);
-				} else {
-					config->currentTxSlot++;
 				}
 				break;
 			default:
@@ -316,7 +323,7 @@ BaseType_t xDmxSendFrame(DmxPortConfig_t* config, DmxBuffer_t* frame) {
 	config->currentTxSlot = 1;
 	config->currentTxBuffer = frame;
 	sercomdevice->USART.DATA.reg = DMX_BREAKBYTE;
-	sercomdevice->USART.INTENSET.bit.TXC = 1;
+	sercomdevice->USART.INTENSET.reg = SERCOM_USART_INTENSET_TXC;
 	
 	return pdPASS;
 }
