@@ -148,6 +148,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	
 	sercomdevice->USART.CTRLA.bit.ENABLE = 1;
 	
+	sam_setModuleInterruptPriority(sercomdevice, config->hw.priority);
 	sam_enableModuleInterrupt(sercomdevice);
 	
 	return pdPASS;

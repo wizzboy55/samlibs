@@ -14,6 +14,7 @@
 #include "FreeRTOS.h"
 
 #include "sercom.h"
+#include "saminterrupt.h"
 
 #define DMX_MAX_SLOTS 512
 #define DMX_STARTCODE_INDEX 0
@@ -77,6 +78,7 @@ typedef struct {
 	GPIOPin_t dirpin;
 	GPIOPin_t ledpin;
 	BaseType_t ledinv;
+	InterruptPriority_t priority;
 } DmxPortHardware_t;
 
 typedef struct {
