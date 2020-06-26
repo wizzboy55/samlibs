@@ -88,6 +88,6 @@ void sam_clearPendingModuleInterrupt(void* const module) {
 	NVIC_ClearPendingIRQ(sam_getModuleInterrupt(module));
 }
 
-void sam_setModuleInterruptPriority(void* const module, uint32_t priority) {
-	NVIC_SetPriority(sam_getModuleInterrupt(module), priority);
+void sam_setModuleInterruptPriority(void* const module, InterruptPriority_t priority) {
+	NVIC_SetPriority(sam_getModuleInterrupt(module), (uint32_t)priority);
 }
