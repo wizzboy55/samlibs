@@ -277,8 +277,12 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 				config->currentTxSlot = 1;
 				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[DMX_STARTCODE_INDEX];
 				config->txState = DmxState_Slots;
-				sercomdevice->USART.INTENSET.reg = SERCOM_USART_INTENSET_DRE;
-				sercomdevice->USART.INTENCLR.reg = SERCOM_USART_INTENCLR_TXC;
+				break;
+			case DmxState_Slots:
+				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[config->currentTxSlot++];
+				if(config->currentTxSlot > config->currentTxBuffer->slotCount) {
+					vDmxEndTransmission(config);
+				}
 				break;
 			default:
 				vDmxEndTransmission(config);
@@ -288,12 +292,6 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 	while(sercomdevice->USART.INTFLAG.bit.DRE && sercomdevice->USART.INTENSET.bit.DRE) {
 		// Data TX Register Empty Interrupt
 		switch(config->txState) {
-			case DmxState_Slots:
-				sercomdevice->USART.DATA.reg = config->currentTxBuffer->dmx[config->currentTxSlot++];
-				if(config->currentTxSlot > config->currentTxBuffer->slotCount) {
-					vDmxEndTransmission(config);
-				}
-				break;
 			default:
 				vDmxEndTransmission(config);
 		}
