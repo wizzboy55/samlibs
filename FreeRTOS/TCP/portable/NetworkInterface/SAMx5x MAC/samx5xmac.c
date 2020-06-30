@@ -20,6 +20,7 @@
 #include "NetworkBufferManagement.h"
 #include "IEEEClause22Registers.h"
 #include "HardwareDescriptor.h"
+#include "sameic.h"
 
 #include "debug_interface.h"
 
