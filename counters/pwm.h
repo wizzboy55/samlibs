@@ -21,9 +21,10 @@ typedef struct {
 	GPIOPin_t gpio_wo1;
 	uint8_t clksource;
 	PWMCounterWidth_t counterWidth;
-} pwmConfig_t;
+} PwmConfig_t;
 
-BaseType_t pwm_init(pwmConfig_t* config);
-uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel);
+BaseType_t xPwmInit(PwmConfig_t* config);
+uint32_t* pulPwmGetPwmCompareRegister(PwmConfig_t* config, uint8_t channel);
+uint8_t* pucPwmGetPwmPeriodRegister(PwmConfig_t* config);
 
 #endif /* PWM_H_ */

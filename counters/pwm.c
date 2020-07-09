@@ -10,7 +10,7 @@
 #include "samgpio.h"
 #include "samclk.h"
 
-BaseType_t pwm_init(pwmConfig_t* config) {
+BaseType_t xPwmInit(PwmConfig_t* config) {
 	Tc* tcdevice = (Tc *)config->module;
 	
 	if(tcdevice->COUNT8.CTRLA.bit.ENABLE == 1) {
@@ -36,7 +36,7 @@ BaseType_t pwm_init(pwmConfig_t* config) {
 	return pdPASS;
 }
 
-uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel) {
+uint32_t* pulPwmGetPwmCompareRegister(PwmConfig_t* config, uint8_t channel) {
 	Tc* tcdevice = (Tc *)config->module;
 	
 	if(channel == 0 || channel == 1) {
@@ -53,7 +53,7 @@ uint32_t* pwm_getPwmCompareRegister(pwmConfig_t* config, uint8_t channel) {
 	return NULL;
 }
 
-uint8_t* pwm_getPwmPeriodRegister(pwmConfig_t* config) {
+uint8_t* pucPwmGetPwmPeriodRegister(PwmConfig_t* config) {
 	Tc* tcdevice = (Tc *)config->module;
 	return &(tcdevice->COUNT8.PER.reg);
 }
