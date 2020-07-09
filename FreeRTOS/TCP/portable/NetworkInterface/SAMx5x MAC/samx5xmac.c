@@ -21,6 +21,7 @@
 #include "IEEEClause22Registers.h"
 #include "HardwareDescriptor.h"
 #include "sameic.h"
+#include "utilities.h"
 
 #include "debug_interface.h"
 
@@ -93,6 +94,7 @@ BaseType_t xSAMx5xMAC_MIIReadFromPHY(uint8_t phyaddr, uint8_t clause, uint8_t re
 
 BaseType_t xSAMx5xMAC_I2CWriteToPHY(uint8_t phyaddr, uint16_t reg, uint8_t *data, uint16_t count) {
 	uint8_t ret = i2c_master_writeBytes16_BE(pMacConfig->i2cConfig, phyaddr, reg, data, count);
+	UNUSED(ret);
 	return pdPASS;
 }
 
@@ -116,6 +118,8 @@ SAMx5xMAC_ReceiveBuffer_t* pxSAMx5xMAC_GetNextReceiveBuffer(void) {
 }
 
 void vSAMx5xMAC_DeferredRxInterruptHandlerTask(void *p) {
+	
+	UNUSED(p);
 	
 	GMAC->IER.bit.RCOMP = 1;
 	
