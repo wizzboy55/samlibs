@@ -23,6 +23,8 @@ void vEnableAllFaults(void) {
 	pSCB->SHCSR.bit.BUSFAULTENA = 1;
 	pSCB->SHCSR.bit.USGFAULTENA = 1;
 	pSCB->SHCSR.bit.MEMFAULTENA = 1;
+	pSCB->CCR.bit.DIV_0_TRP = 1;
+	pSCB->CCR.bit.UNALIGN_TRP = 1;
 	#elif defined (SAMD20)
 	
 	#endif
@@ -30,7 +32,7 @@ void vEnableAllFaults(void) {
 
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
 
-	DEBUG_printf( ("StackOverflow! Task: %s\tHandle: %d\n", pcTaskName, (uint32_t)xTask) );
+	DEBUG_printf( ("StackOverflow! Task: %s\tHandle: %d\n", pcTaskGetName(xTaskGetCurrentTaskHandle()), (uint32_t)xTaskGetCurrentTaskHandle()) );
 
 	#ifdef DEBUG
 	for(;;){}
@@ -59,6 +61,29 @@ void vAssertCalled(const char *pcFileName, unsigned long ulLine) {
 	#else
 	watchdog_reset();
 	#endif
+}
+
+void vPrintUsageFaultCortexM4(void) {
+	CortexM4_SCB_t* pSCB = (CortexM4_SCB_t*)SCB;
+	DEBUG_printf( ("Usage Fault.\n") );
+	if(pSCB->CFSR.UFSR.bit.UNDEFINSTR) {
+		DEBUG_printf( ("Undefined Instruction Fault.\n") );
+	}
+	if(pSCB->CFSR.UFSR.bit.INVSTATE) {
+		DEBUG_printf( ("Invalid State Fault.\n") );
+	}
+	if(pSCB->CFSR.UFSR.bit.INVPC) {
+		DEBUG_printf( ("Invalid PC Load Fault.\n") );
+	}
+	if(pSCB->CFSR.UFSR.bit.NOCP) {
+		DEBUG_printf( ("No Coprocessor Fault.\n") );
+	}
+	if(pSCB->CFSR.UFSR.bit.UNALIGNED) {
+		DEBUG_printf( ("Unaligned Access Fault.\n") );
+	}
+	if(pSCB->CFSR.UFSR.bit.DIVBYZERO) {
+		DEBUG_printf( ("Division by Zero Fault.\n") );
+	}
 }
 
 void vPrintMemManagementFaultCortexM4(void) {
@@ -95,7 +120,7 @@ void vCheckFaultStatusRegisterCortexM4(void) {
 			vPrintMemManagementFaultCortexM4();
 		}
 		if(pSCB->CFSR.UFSR.reg) {
-			DEBUG_printf( ("Usage Fault.\n") );
+			vPrintUsageFaultCortexM4();
 		}
 	} else {
 		DEBUG_printf( ("Hard Fault is not forced.\n") );
@@ -205,7 +230,11 @@ void BusFault_Handler(void) {
 
 void UsageFault_Handler(void) {
 	
-	DEBUG_printf( ("Usage Fault!\n") );
+	#if defined(SAME54) || defined(SAME53)
+	vPrintUsageFaultCortexM4();
+	#elif defined(SAMD20)
+	
+	#endif
 	
 	for(;;) {}
 }
