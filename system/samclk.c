@@ -55,6 +55,7 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 			case (uint32_t)TCC4: return BUS_APBD;
 			case (uint32_t)EIC:	 return BUS_APBA;
 			case (uint32_t)DAC:	 return BUS_APBD;
+			case (uint32_t)EVSYS: return BUS_APBB;
 			default: return BUS_UNKNOWN;
 		}
 	#elif defined SAMD20
@@ -125,6 +126,7 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 			case (uint32_t)TCC4:	return MCLK_APBDMASK_TCC4;
 			case (uint32_t)EIC:		return MCLK_APBAMASK_EIC;
 			case (uint32_t)DAC:		return MCLK_APBDMASK_DAC;
+			case (uint32_t)EVSYS:	return MCLK_APBBMASK_EVSYS;
 			default: return 0;
 		}
 	#elif defined SAMD20
@@ -272,6 +274,7 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 		case (uint32_t)TCC4:	return TCC4_GCLK_ID;
 		case (uint32_t)EIC:		return EIC_GCLK_ID;
 		case (uint32_t)DAC:		return DAC_GCLK_ID;
+		case (uint32_t)EVSYS:	return EVSYS_GCLK_ID_0;
 		default: return 0;
 	}
 	#elif defined SAMD20

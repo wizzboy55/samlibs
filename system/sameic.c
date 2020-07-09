@@ -84,6 +84,14 @@ eEICChannels_t sam_getGPIOEICChannel(GPIOPin_t gpio) {
 	return (eEICChannels_t)(pin & 0xF);
 }
 
+void sam_EICEnableEvent(eEICChannels_t channel) {
+	EIC->EVCTRL.bit.EXTINTEO = (1 << channel);
+}
+
+void sam_EICDisableEvent(eEICChannels_t channel) {
+	EIC->EVCTRL.bit.EXTINTEO = 0xFFFF ^ (1 << channel);
+}
+
 #if defined (EIC_SINGLECHANNELINTERRUPT)
 
 void sam_EICSetCallback(eEICChannels_t channel, EICCallback_t cb) {

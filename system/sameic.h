@@ -26,4 +26,7 @@ eEICChannels_t sam_getGPIOEICChannel(GPIOPin_t gpio);
 
 void sam_EICSetCallback(eEICChannels_t channel, EICCallback_t cb);
 
+void sam_EICEnableEvent(eEICChannels_t channel);
+void sam_EICDisableEvent(eEICChannels_t channel);
+
 #endif /* SAMEIC_H_ */
