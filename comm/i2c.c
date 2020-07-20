@@ -375,20 +375,67 @@ uint8_t i2c_master_writeBytes16_BE(i2cConfig_t* config, uint8_t device, uint16_t
 
 
 
+/*
+	Initialize the I2C interface
+*/
+void i2c_mst_init(i2cConfig_t* config) {
+
+	Sercom* sercomdevice = (Sercom *)config->sercom;
+
+	if(sercomdevice->I2CM.CTRLA.bit.MODE == SERCOM_I2CM_CTRLA_MODE_I2CM) {
+		return;
+	}
+
+	samclk_enable_peripheral_clock(sercomdevice);
+	samclk_enable_gclk_channel(sercomdevice, config->clksource);
+	samclk_enable_glck_slow_channel(sercomdevice, 11);
+
+	sercomdevice->I2CM.CTRLA.reg = SERCOM_I2CM_CTRLA_SWRST;
+
+	// Wait while reset is in effect
+	while(sercomdevice->I2CM.CTRLA.bit.SWRST) {}
+
+	sercomdevice->I2CM.CTRLA.bit.MODE = SERCOM_I2CM_CTRLA_MODE_I2CM;
+	
+	sercomdevice->I2CM.CTRLA.bit.LOWTOUTEN = 1;
+	
+	sercomdevice->I2CM.CTRLA.bit.INACTOUT = 1;
+
+	// We are assuming GCLK source clock is the main clock (CONF_CPU_FREQUENCY) divided by DIV to calculate the baud
+	uint8_t div = GCLK->GENCTRL[config->clksource].bit.DIV == 0 ? 1 : GCLK->GENCTRL[config->clksource].bit.DIV; // Ensure != 0
+	uint16_t baud = CONF_CPU_FREQUENCY / div / (2 * config->baudrate) - 1;
+	ASSERT(baud <= 0xff); // Invalid baudrate for the chosen clock source
+	sercomdevice->I2CM.BAUD.reg = baud;
+
+	sercomdevice->I2CM.INTENCLR.reg = 0xFF;
+
+	sercomdevice->I2CM.CTRLA.bit.ENABLE = 1;
+
+	sercomdevice->I2CM.STATUS.bit.BUSSTATE = 0x01;
+	while(sercomdevice->I2CM.SYNCBUSY.bit.SYSOP == 1);
+
+	samgpio_setPinFunction(config->pin_sda, config->pinmux);
+	samgpio_setPinFunction(config->pin_scl, config->pinmux);
+}
+
+/*
+	Used by other i2c functions to start a transaction.
+
+	- Sends a start or repeat start
+	- Sends the first control byte (7 bit address + read bit)
+*/
+
 static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag)
 {
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01); // I2C Bus Busy
 
-	uint8_t addr = readFlag ? (slave_addr << 1 | I2C_READMASK) : slave_addr << 1;
+	uint8_t addr = readFlag ? (slave_addr << 1) | I2C_READMASK : slave_addr << 1;
 
 	sercomdevice->I2CM.ADDR.reg = addr; // Will trigger a start or repeat start depending on bus state (IDLE vs OWNED)
 
 	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
-
-	if(sercomdevice->I2CM.INTFLAG.bit.ERROR)
-		debug_printf("I2C error\n");
 
 	return sercomdevice->I2CM.STATUS.bit.RXNACK == 0;
 }
@@ -428,6 +475,8 @@ uint16_t i2c_mst_write(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, ui
 }
 
 
+
+
 /*
 	Read multiple bytes on the I2C bus
 
@@ -440,67 +489,10 @@ uint16_t i2c_mst_write(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, ui
 */
 uint16_t i2c_mst_read(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, uint8_t buf_size)
 {
-	Sercom* sercomdevice = (Sercom *)config->sercom;
-	
-	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
-
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-	sercomdevice->I2CM.ADDR.reg = (slave_addr << 1) | I2C_READMASK;
-
-	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR);
-
-	if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
-		sercomdevice->I2CM.INTFLAG.bit.ERROR = 1; // Clear error flag
-		return 0;
-	}
-
-	uint16_t i;
-
-	for(i = 0; i < buf_size; i++) {
-		if(i < (buf_size - 1)) {
-			sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-			buf[buf_size-i-1] = sercomdevice->I2CM.DATA.reg;
-			sercomdevice->I2CM.CTRLB.bit.CMD = 0x02;	// Send ACK
-		} else {
-			sercomdevice->I2CM.CTRLB.bit.ACKACT = 1;
-			sercomdevice->I2CM.CTRLB.bit.CMD = 0x03;	// Send NACK + Stop
-			buf[buf_size-i-1] = sercomdevice->I2CM.DATA.reg;
-			break;
-		}
-		uint16_t timeout = 0xFFFF;
-		while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
-			if(timeout-- == 0) {
-				return 0;
-			}
-		}
-	}
-
-	return i;
-
-/*
-	// if(!i2c_mst_start(config, slave_addr, true))
-	// 	return 0;	
+	if(!i2c_mst_start(config, slave_addr, true))
+		return 0;	
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
-
-	if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
-		i2c_mst_stop(config);
-		sercomdevice->I2CM.INTFLAG.bit.ERROR = 1;
-		debug_printf("I2C error 1\n");
-	}
-	
-	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
-	
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
-	sercomdevice->I2CM.ADDR.reg = slave_addr << 1 | I2C_READMASK;
-
-	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
-	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03;	// Acknowledgment Action + Stop
-
-	if(sercomdevice->I2CM.INTFLAG.bit.ERROR)
-		debug_printf("I2C error 2\n");
-
-	return 0;
 
 	uint16_t i;
 	for(i = 0; i < buf_size; i++)
@@ -510,28 +502,25 @@ uint16_t i2c_mst_read(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, uin
 		if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
 			// sercomdevice->I2CM.INTFLAG.bit.ERROR = 1; // Clear error flag
 			// i2c_mst_stop(config);
-			// debug_printf("I2C Error\n");
-		// 	break;
+			debug_printf("I2C Error mst_read\n");
+			break;
 		}
-
 
 		if(i == buf_size - 1) // Last byte to read
 		{
 			sercomdevice->I2CM.CTRLB.bit.ACKACT = 1; // Set to NACK
-			// sercomdevice->I2CM.CTRLB.bit.CMD = 0x03; // Send NACK + Stop
 			// We don't really send the NACK here, it will be sent with the next start or stop action
 		}
 		else
 		{
-			sercomdevice->I2CM.CTRLB.bit.ACKACT = 0; // ACK
-			// sercomdevice->I2CM.CTRLB.bit.CMD = 0x02; // Send ACK or NACK
+			sercomdevice->I2CM.CTRLB.bit.ACKACT = 0; // Set to ACK
+			sercomdevice->I2CM.CTRLB.bit.CMD = 0x02; // Send the ACK
 		}
 
 		buf[i] = sercomdevice->I2CM.DATA.reg; // Read byte
 	}
 
 	return i;
-	//*/
 }
 
 /*
@@ -561,8 +550,8 @@ uint8_t i2c_mst_readByte(i2cConfig_t* config, uint8_t slave_addr)
 
 	uint8_t byte = sercomdevice->I2CM.DATA.reg; // Read byte
 
-	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0; // ACK	
-	// sercomdevice->I2CM.CTRLB.bit.CMD = 0x02; // Send ACK
+	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0; // ACK
+	// sercomdevice->I2CM.CTRLB.bit.CMD = 0x03; // ACK + STOP
 
 	return byte;
 }
