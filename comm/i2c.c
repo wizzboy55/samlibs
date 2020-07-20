@@ -382,9 +382,9 @@ void i2c_mst_init(i2cConfig_t* config) {
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
-	if(sercomdevice->I2CM.CTRLA.bit.MODE == SERCOM_I2CM_CTRLA_MODE_I2CM) {
-		return;
-	}
+	// if(sercomdevice->I2CM.CTRLA.bit.MODE == SERCOM_I2CM_CTRLA_MODE_I2CM) {
+	// 	return;
+	// }
 
 	samclk_enable_peripheral_clock(sercomdevice);
 	samclk_enable_gclk_channel(sercomdevice, config->clksource);
@@ -429,13 +429,18 @@ static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag
 {
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
-	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01); // I2C Bus Busy
+	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE == 0x03); // I2C Bus Busy
+
+	uint8_t initial_bus_state = sercomdevice->I2CM.STATUS.bit.BUSSTATE;
 
 	uint8_t addr = readFlag ? (slave_addr << 1) | I2C_READMASK : slave_addr << 1;
 
 	sercomdevice->I2CM.ADDR.reg = addr; // Will trigger a start or repeat start depending on bus state (IDLE vs OWNED)
 
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	if(initial_bus_state == 0x01 || initial_bus_state == 0x00)
+		while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	else
+		while(sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
 
 	return sercomdevice->I2CM.STATUS.bit.RXNACK == 0;
 }
@@ -560,5 +565,6 @@ uint16_t i2c_mst_stop(i2cConfig_t* config)
 {
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03; // ACK/NACK + stop
+	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE == 0x02);
 }
 
