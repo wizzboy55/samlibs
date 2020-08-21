@@ -118,6 +118,7 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 			case (uint32_t)TCC4:	return MCLK_APBDMASK_TCC4;
 			case (uint32_t)EIC:		return MCLK_APBAMASK_EIC;
 			case (uint32_t)DAC:		return MCLK_APBDMASK_DAC;
+			case (uint32_t)WDT:		return MCLK_APBAMASK_WDT;
 			default: return 0;
 		}
 	#elif defined SAMD20
