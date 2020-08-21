@@ -55,6 +55,7 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 			case (uint32_t)TCC4: return BUS_APBD;
 			case (uint32_t)EIC:	 return BUS_APBA;
 			case (uint32_t)DAC:	 return BUS_APBD;
+			case (uint32_t)WDT:  return BUS_APBA;
 			default: return BUS_UNKNOWN;
 		}
 	#elif defined SAMD20
