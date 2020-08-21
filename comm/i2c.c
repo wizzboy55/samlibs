@@ -497,17 +497,22 @@ uint16_t i2c_mst_read(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, uin
 	if(!i2c_mst_start(config, slave_addr, true))
 		return 0;	
 
+
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
 	uint16_t i;
 	for(i = 0; i < buf_size; i++)
 	{
 		// Wait for a byte or an error
-		while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR);
+		while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR) {
+			if(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x02) // Something's wrong, we should be in control of the bus
+				break;
+		}
+		
 		if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
 			// sercomdevice->I2CM.INTFLAG.bit.ERROR = 1; // Clear error flag
 			// i2c_mst_stop(config);
-			debug_printf("I2C Error mst_read\n");
+			// debug_printf("I2C Error mst_read\n");
 			break;
 		}
 
@@ -546,7 +551,10 @@ uint8_t i2c_mst_readByte(i2cConfig_t* config, uint8_t slave_addr)
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
 	// Wait for a byte or an error
-	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR);
+	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1 && !sercomdevice->I2CM.INTFLAG.bit.ERROR) {
+		if(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x02) // Something's wrong, we should be in control of the bus
+			return 0;
+	}
 	
 	if(sercomdevice->I2CM.INTFLAG.bit.ERROR) {
 		sercomdevice->I2CM.INTFLAG.bit.ERROR = 1; // Clear error flag
