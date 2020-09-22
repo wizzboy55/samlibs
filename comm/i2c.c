@@ -8,6 +8,7 @@
 #include "i2c.h"
 #include "samclk.h"
 #include "samgpio.h"
+#include "task.h"
 
 #define I2C_READMASK 0x01
 
@@ -394,6 +395,11 @@ uint8_t i2c_master_writeBytes16_BE(i2cConfig_t* config, uint8_t device, uint16_t
 */
 void i2c_mst_init(i2cConfig_t* config) {
 
+	if(config->mutex != NULL)
+		return;
+
+	debug_printf("i2c_mst_init : %X\n", config);
+	
 	config->mutex = xSemaphoreCreateMutex();
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
@@ -401,6 +407,7 @@ void i2c_mst_init(i2cConfig_t* config) {
 	// if(sercomdevice->I2CM.CTRLA.bit.MODE == SERCOM_I2CM_CTRLA_MODE_I2CM) {
 	// 	return;
 	// }
+
 
 	samclk_enable_peripheral_clock(sercomdevice);
 	samclk_enable_gclk_channel(sercomdevice, config->clksource);
@@ -443,7 +450,8 @@ void i2c_mst_init(i2cConfig_t* config) {
 
 static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag)
 {
-	xSemaphoreTake(config->mutex, portMAX_DELAY);
+	if(xTaskGetCurrentTaskHandle() != xSemaphoreGetMutexHolder(config->mutex)) // Current task does not already own the mutex
+		xSemaphoreTake(config->mutex, portMAX_DELAY);
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
@@ -496,7 +504,10 @@ uint16_t i2c_mst_write(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, ui
 	{
 		sercomdevice->I2CM.DATA.reg = buf[i]; // Write data
 
-		while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1); // Wait for operation to finish
+		while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) // Wait for operation to finish
+		{
+
+		}
 
 		if(sercomdevice->I2CM.STATUS.bit.RXNACK == 1)
 			return i;
