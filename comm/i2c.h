@@ -10,6 +10,7 @@
 #define I2C_H_
 
 #include "FreeRTOS.h"
+#include "semphr.h"
 
 #include "stdint.h"
 #include "sercom.h"
@@ -21,6 +22,7 @@ typedef struct {
 	uint8_t pin_scl;
 	uint8_t pinmux;
 	uint8_t clksource;
+	SemaphoreHandle_t mutex; // To support multithread
 } i2cConfig_t;
 
 void i2c_master_initIF(i2cConfig_t* config);

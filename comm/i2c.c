@@ -394,6 +394,8 @@ uint8_t i2c_master_writeBytes16_BE(i2cConfig_t* config, uint8_t device, uint16_t
 */
 void i2c_mst_init(i2cConfig_t* config) {
 
+	config->mutex = xSemaphoreCreateMutex();
+
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
 	// if(sercomdevice->I2CM.CTRLA.bit.MODE == SERCOM_I2CM_CTRLA_MODE_I2CM) {
@@ -441,6 +443,8 @@ void i2c_mst_init(i2cConfig_t* config) {
 
 static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag)
 {
+	xSemaphoreTake(config->mutex, portMAX_DELAY);
+
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE == 0x03); // I2C Bus Busy
@@ -457,6 +461,14 @@ static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag
 		while(sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
 
 	return sercomdevice->I2CM.STATUS.bit.RXNACK == 0;
+}
+
+uint16_t i2c_mst_stop(i2cConfig_t* config)
+{
+	Sercom* sercomdevice = (Sercom *)config->sercom;
+	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03; // ACK/NACK + stop
+	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE == 0x02);
+	xSemaphoreGive(config->mutex);
 }
 
 
@@ -494,7 +506,7 @@ uint16_t i2c_mst_write(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, ui
 }
 
 
-
+//// Write without sending start or repeat start
 // uint16_t i2c_mst_write_continue(i2cConfig_t* config, uint8_t *buf, uint8_t buf_size)
 // {
 // 	Sercom* sercomdevice = (Sercom *)config->sercom;
@@ -514,6 +526,7 @@ uint16_t i2c_mst_write(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, ui
 
 // 	return buf_size;
 // }
+
 
 /*
 	Read multiple bytes on the I2C bus
@@ -602,12 +615,6 @@ uint8_t i2c_mst_readByte(i2cConfig_t* config, uint8_t slave_addr)
 	return byte;
 }
 
-uint16_t i2c_mst_stop(i2cConfig_t* config)
-{
-	Sercom* sercomdevice = (Sercom *)config->sercom;
-	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03; // ACK/NACK + stop
-	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE == 0x02);
-}
 
 
 //
