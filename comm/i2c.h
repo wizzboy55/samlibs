@@ -38,6 +38,7 @@ uint8_t i2c_master_writeBytes16_LE(i2cConfig_t* config, uint8_t device, uint16_t
 uint8_t i2c_master_writeBytes16_BE(i2cConfig_t* config, uint8_t device, uint16_t addr, uint8_t *data, uint16_t num);
 
 
+void i2c_mst_init(i2cConfig_t* config);
 
 /*
 	Write multiple bytes to the I2C bus
