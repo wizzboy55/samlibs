@@ -409,7 +409,7 @@ static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag
 	return sercomdevice->I2CM.STATUS.bit.RXNACK == 0;
 }
 
-uint16_t i2c_mst_stop(i2cConfig_t* config)
+void i2c_mst_stop(i2cConfig_t* config)
 {
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03; // ACK/NACK + stop

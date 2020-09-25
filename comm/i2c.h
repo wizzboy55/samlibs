@@ -67,7 +67,7 @@ uint16_t i2c_mst_read(i2cConfig_t* config, uint8_t slave_addr, uint8_t *buf, uin
 // Read one byte
 uint8_t i2c_mst_readByte(i2cConfig_t* config, uint8_t slave_addr);
 
-uint16_t i2c_mst_stop(i2cConfig_t* config);
+void i2c_mst_stop(i2cConfig_t* config);
 
 
 #endif /* I2C_H_ */
