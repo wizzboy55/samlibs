@@ -37,7 +37,7 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
 	#ifdef DEBUG
 	for(;;){}
 	#else
-	watchdog_reset();
+	utils_WatchDogReset();
 	#endif
 }
 
@@ -48,7 +48,7 @@ void vApplicationMallocFailedHook(void) {
 	#ifdef DEBUG
 	for(;;){}
 	#else
-	watchdog_reset();
+	utils_WatchDogReset();
 	#endif
 }
 
@@ -59,7 +59,7 @@ void vAssertCalled(const char *pcFileName, unsigned long ulLine) {
 	#ifdef DEBUG
 	for(;;){}
 	#else
-	watchdog_reset();
+	utils_WatchDogReset();
 	#endif
 }
 
@@ -181,7 +181,7 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 	#ifdef DEBUG
 	for(;;){}
 	#else
-	watchdog_reset();
+	utils_WatchDogReset();
 	#endif
 }
 

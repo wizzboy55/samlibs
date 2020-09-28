@@ -61,7 +61,7 @@ inline BaseType_t utils_IsWatchDogTimerReset(void) {
 	return utils_rcause.reg & ResetCause_WDT;
 }
 
-void watchdog_reset(void) {
+void utils_WatchDogReset(void) {
 	DEBUG_printf( ("BTLDR ERR: WDT Rst\n") );
 //	WDT->WDT_CTRLA.bit.ALWAYSON = 1;
 	WDT->WDT_CTRLA.bit.ENABLE = 1;
@@ -72,10 +72,6 @@ void watchdog_reset(void) {
 
 void utils_SystemReset(void) {
 	NVIC_SystemReset();
-}
-
-void utils_WatchDogReset(void) {
-	watchdog_reset();
 }
 
 uint8_t hexCharToUint(const char c) {
