@@ -336,8 +336,6 @@ void i2c_mst_init(i2cConfig_t* config) {
 
 	if(config->mutex != NULL)
 		return;
-
-	debug_printf("i2c_mst_init : %X\n", config);
 	
 	config->mutex = xSemaphoreCreateMutex();
 
