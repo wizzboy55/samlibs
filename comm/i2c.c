@@ -24,6 +24,8 @@ uint8_t i2c_mst_writeBytes16_BE(i2cConfig_t* config, uint8_t device, uint16_t ad
 uint8_t i2c_mst_writeAddr16_BE(i2cConfig_t* config, uint8_t device, uint16_t addr);
 uint8_t i2c_mst_readBytes_BE(i2cConfig_t* config, uint8_t device, uint8_t *buf, uint16_t num);
 
+static SemaphoreHandle_t i2cGlobalMutex = NULL;
+
 void i2c_master_initIF(i2cConfig_t* config) {
 
 	i2c_mst_init(config);
@@ -263,12 +265,10 @@ uint8_t i2c_master_writeBytes16_LE(i2cConfig_t* config, uint8_t device, uint16_t
 }
 //*/
 
-
 uint8_t i2c_master_writeBytes16_BE(i2cConfig_t* config, uint8_t device, uint16_t addr, uint8_t *data, uint16_t num) {
 
 	return i2c_mst_writeBytes16_BE(config, device, addr, data, num);
 }
-
 
 /*
 	Initialize the I2C interface
@@ -277,8 +277,19 @@ void i2c_mst_init(i2cConfig_t* config) {
 
 	if(config->mutex != NULL)
 		return;
+
+
+	// PATCH : We use a global I2C mutex here instead of one mutex per I2C channel
+	// because it breaks otherwise, as if writing to some register in one SERCOM would
+	// affect the other. Not sure why. Having one global mutex for any i2c communication.
+	// TODO : Find why this is and correct the source of the problem, we should be able
+	// to use one mutex per channel.
+	if(i2cGlobalMutex == NULL)
+		i2cGlobalMutex = xSemaphoreCreateMutex();
+	config->mutex = i2cGlobalMutex; // Associate channel mutex to global channel
 	
-	config->mutex = xSemaphoreCreateMutex();
+
+	// config->mutex = xSemaphoreCreateMutex(); // Create one mutex per I2C channel
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
@@ -328,7 +339,10 @@ void i2c_mst_init(i2cConfig_t* config) {
 static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag)
 {
 	if(xTaskGetCurrentTaskHandle() != xSemaphoreGetMutexHolder(config->mutex)) // Current task does not already own the mutex
-		xSemaphoreTake(config->mutex, portMAX_DELAY);
+	{
+		BaseType_t ret = xSemaphoreTake(config->mutex, portMAX_DELAY);
+		// debug_printf("Mutex %x, %x\n", config, config->mutex);
+	}
 
 	Sercom* sercomdevice = (Sercom *)config->sercom;
 
@@ -340,10 +354,21 @@ static bool i2c_mst_start(i2cConfig_t* config, uint8_t slave_addr, bool readFlag
 
 	sercomdevice->I2CM.ADDR.reg = addr; // Will trigger a start or repeat start depending on bus state (IDLE vs OWNED)
 
+	// debug_printf("Bus state %x, %x, %d\n", config, slave_addr, sercomdevice->I2CM.STATUS.bit.BUSSTATE);
+	// debug_printf("Initial state %x, %x, %d\n", config, slave_addr, initial_bus_state);
 	if(initial_bus_state == 0x01 || initial_bus_state == 0x00)
 		while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
 	else
-		while(sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	{
+		while(sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1)
+		{
+			if(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x02)
+			{
+				// It gets stuck here at one point if we use one mutex per port instead of a global mutex
+				// debug_printf("Waiting on %x, %x\n", config, slave_addr);
+			}
+		}
+	}
 
 	return sercomdevice->I2CM.STATUS.bit.RXNACK == 0;
 }
@@ -354,6 +379,7 @@ void i2c_mst_stop(i2cConfig_t* config)
 	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03; // ACK/NACK + stop
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE == 0x02);
 	xSemaphoreGive(config->mutex);
+	// debug_printf("stop %x\n", config);
 }
 
 
