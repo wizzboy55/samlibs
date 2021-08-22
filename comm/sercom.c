@@ -126,6 +126,17 @@ inline uint8_t uSercomBaudrateToRegisterSynchronous(uint32_t baudrate) {
 	return (CONF_CPU_FREQUENCY / (2*baudrate)) - 1;
 }
 
+inline uint16_t ulSercomBaudrateToRegisterFractional(uint32_t baudrate) {
+	SERCOM_USART_BAUD_Type baudreg;
+	
+	uint32_t baudTimes8 = (CONF_CPU_FREQUENCY * 8) / (16UL * baudrate);
+	
+	baudreg.FRACFP.BAUD = baudTimes8 / 8;
+	baudreg.FRACFP.FP = baudTimes8 % 8;
+	
+	return (uint16_t)baudreg.reg;
+}
+
 inline uint8_t uSercomDataOrderToRegister(enum SercomDataOrder_e dataOrder) {
 	return dataOrder == LSBFirst;
 }

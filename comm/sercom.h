@@ -41,6 +41,7 @@ int8_t xSercomPadToDOPO(enum SercomPads_e pad_do, enum SercomPads_e pad_clk);
 int8_t xSercomDOPOToDIPO(int8_t dopo);
 uint16_t ulSercomBaudrateToRegisterArithmetic(uint32_t baudrate);
 uint8_t uSercomBaudrateToRegisterSynchronous(uint32_t baudrate);
+uint16_t ulSercomBaudrateToRegisterFractional(uint32_t baudrate);
 uint8_t uSercomDataOrderToRegister(enum SercomDataOrder_e dataOrder);
 uint8_t uSercomParityToFrameFormat(enum SercomParity_e parity);
 uint8_t uSercomParityToRegister(enum SercomParity_e parity);
