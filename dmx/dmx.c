@@ -213,7 +213,6 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 					vDmxPortPushNewFrame(config);
 				}
 				config->rxState = DmxState_StartCode;
-				samgpio_togglePinLevelFast(GPIO(GPIO_PORTA, 1));
 			}
 		} else {
 			switch(config->rxState) {
