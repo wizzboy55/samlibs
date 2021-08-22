@@ -112,7 +112,7 @@ BaseType_t xDmxInitSercom(DmxPortConfig_t* config) {
 	
 	while(sercomdevice->USART.CTRLA.bit.SWRST) {}
 	
-	sercomdevice->USART.BAUD.reg = 65536 - ((65536 * 16.0f * DMX_BAUDRATE) / CONF_CPU_FREQUENCY);
+	sercomdevice->USART.BAUD.reg = ulSercomBaudrateToRegisterArithmetic(DMX_BAUDRATE);
 	
 	sercomdevice->USART.CTRLA.bit.DORD = 1;
 	sercomdevice->USART.CTRLA.bit.FORM = 0;
