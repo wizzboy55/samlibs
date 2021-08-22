@@ -225,7 +225,7 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 					config->currentRxBuffer->slotCount = 1;
 					if(data_byte == DMX_STARTCODE) {
 						config->rxState = DmxState_Slots;
-					} else if(RDM_STARTCODE) {
+					} else if(data_byte == RDM_STARTCODE) {
 						config->rxState = DmxState_Rdm;
 					} else {
 						config->rxState = DmxState_Idle;
