@@ -207,11 +207,14 @@ inline void vDmxInterruptHandler(DmxPortConfig_t* config) {
 		} else if(sercomdevice->USART.STATUS.bit.FERR) {
 			// Framing Error = Break Condition
 			sercomdevice->USART.STATUS.reg = SERCOM_USART_STATUS_FERR;
-			if(config->currentRxBuffer->slotCount != 0) {
-				// Incomplete frame received
-				vDmxPortPushNewFrame(config);
+			if(samgpio_getPinLevelFast(config->hw.rxpin) == 0) {
+				if(config->currentRxBuffer->slotCount != 0) {
+					// Incomplete frame received
+					vDmxPortPushNewFrame(config);
+				}
+				config->rxState = DmxState_StartCode;
+				samgpio_togglePinLevelFast(GPIO(GPIO_PORTA, 1));
 			}
-			config->rxState = DmxState_StartCode;
 		} else {
 			switch(config->rxState) {
 				case DmxState_Idle:
