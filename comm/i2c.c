@@ -8,6 +8,8 @@
 #include "i2c.h"
 #include "samclk.h"
 #include "samgpio.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define I2C_READMASK 0x01
 
@@ -64,11 +66,23 @@ uint8_t i2c_master_readByte(i2cConfig_t* config, uint8_t device) {
 	
 	sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 	
-	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01);
+	TickType_t timeoutTick = xTaskGetTickCount();
+	
+	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01) {
+		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+			return pdFALSE;
+		}
+	}
 
 	sercomdevice->I2CM.ADDR.reg = device | I2C_READMASK;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	timeoutTick = xTaskGetTickCount();
+
+	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
+		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+			return pdFALSE;
+		}
+	}
 
 	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03;	// Send NACK
 
@@ -157,11 +171,23 @@ uint8_t i2c_master_writeAddr_LE(i2cConfig_t* config, uint8_t device, uint8_t add
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	TickType_t timeoutTick = xTaskGetTickCount();
+
+	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
+		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+			return pdFALSE;
+		}
+	}
 
 	sercomdevice->I2CM.DATA.reg = addr;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	timeoutTick = xTaskGetTickCount();
+
+	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
+		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+			return pdFALSE;
+		}
+	}
 
 	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03;	// Send Stop
 
@@ -178,15 +204,33 @@ uint8_t i2c_master_writeAddr16_LE(i2cConfig_t* config, uint8_t device, uint16_t 
 
 	sercomdevice->I2CM.ADDR.reg = device & ~I2C_READMASK;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	TickType_t timeoutTick = xTaskGetTickCount();
+
+	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
+		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+			return pdFALSE;
+		}
+	}
 
 	sercomdevice->I2CM.DATA.reg = addr & 0x00FF;
 	
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	timeoutTick = xTaskGetTickCount();
+	
+	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
+		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+			return pdFALSE;
+		}
+	}
 	
 	sercomdevice->I2CM.DATA.reg = (addr >> 8) & 0xFF;
 
-	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1);
+	timeoutTick = xTaskGetTickCount();
+
+	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
+		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+			return pdFALSE;
+		}
+	}
 
 	sercomdevice->I2CM.CTRLB.bit.CMD = 0x03;	// Send Stop
 
