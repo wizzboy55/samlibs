@@ -30,7 +30,7 @@ void i2c_master_initIF(i2cConfig_t* config) {
 	}
 
 	samclk_enable_peripheral_clock(sercomdevice);
-	samclk_enable_gclk_channel(sercomdevice, 0);
+	samclk_enable_gclk_channel(sercomdevice, config->clksource);
 	samclk_enable_glck_slow_channel(sercomdevice, 11);
 
 	sercomdevice->I2CM.CTRLA.reg = SERCOM_I2CM_CTRLA_SWRST;
