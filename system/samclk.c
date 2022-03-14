@@ -21,7 +21,7 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#if defined(SAME54) || defined(SAME53)
+	#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 		switch(intmodule) {
 			case (uint32_t)SERCOM0: return BUS_APBA;
 			case (uint32_t)SERCOM1: return BUS_APBA;
@@ -35,7 +35,9 @@ ClockBus_t samclk_get_peripheral_bus(const void *const module) {
 		#ifdef SERCOM7
 			case (uint32_t)SERCOM7: return BUS_APBD;
 		#endif
+		#ifdef GMAC
 			case (uint32_t)GMAC: return BUS_APBC;
+		#endif
 			case (uint32_t)TC0: return BUS_APBA;
 			case (uint32_t)TC1: return BUS_APBA;
 			case (uint32_t)TC2: return BUS_APBB;
@@ -92,7 +94,7 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#if defined(SAME54) || defined(SAME53)
+	#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 		switch(intmodule) {
 			case (uint32_t)SERCOM0: return MCLK_APBAMASK_SERCOM0;
 			case (uint32_t)SERCOM1: return MCLK_APBAMASK_SERCOM1;
@@ -106,7 +108,9 @@ uint32_t samclk_get_peripheral_mask(const void *const module) {
 		#ifdef SERCOM7
 			case (uint32_t)SERCOM7: return MCLK_APBDMASK_SERCOM7;
 		#endif
+		#ifdef GMAC
 			case (uint32_t)GMAC:	return MCLK_APBCMASK_GMAC;
+		#endif
 			case (uint32_t)TC0:		return MCLK_APBAMASK_TC0;
 			case (uint32_t)TC1:		return MCLK_APBAMASK_TC1;
 			case (uint32_t)TC2:		return MCLK_APBBMASK_TC2;
@@ -168,7 +172,7 @@ void samclk_enable_peripheral_clock(const void *const module) {
 		DEBUG_printf( ("MCLK ERROR: Unsupported peripheral.\n") );
 	}
 
-	#if defined(SAME54) || defined(SAME53)
+	#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 		CRITICAL_SECTION_ENTER();
 		switch(bus) {
 			case BUS_AHB:
@@ -240,7 +244,7 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 	
 	uint32_t intmodule = (uint32_t)module;
 	
-	#if defined(SAME54) || defined(SAME53)
+	#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 	switch(intmodule) {
 		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_CORE;
 		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_CORE;
@@ -254,7 +258,9 @@ uint8_t samclk_get_peripheral_clockid(const void *const module) {
 	#ifdef SERCOM7
 		case (uint32_t)SERCOM7: return SERCOM7_GCLK_ID_CORE;
 	#endif
+	#ifdef GMAC
 		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
+	#endif
 		case (uint32_t)TC0:		return TC0_GCLK_ID;
 		case (uint32_t)TC1:		return TC1_GCLK_ID;
 		case (uint32_t)TC2:		return TC2_GCLK_ID;
@@ -335,6 +341,16 @@ uint8_t samclk_get_peripheral_slowclockid(const void *const module) {
 		case (uint32_t)GMAC:	return GMAC_CLK_AHB_ID;
 		default: return 0;
 	}
+	#elif defined SAMD51
+	switch(intmodule) {
+		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM1: return SERCOM1_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM2: return SERCOM2_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM3: return SERCOM3_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM4: return SERCOM4_GCLK_ID_SLOW;
+		case (uint32_t)SERCOM5: return SERCOM5_GCLK_ID_SLOW;
+		default: return 0;
+	}
 	#elif defined SAMD20
 	switch(intmodule) {
 		case (uint32_t)SERCOM0: return SERCOM0_GCLK_ID_SLOW;
@@ -363,7 +379,7 @@ void samclk_enable_gclk_channel(const void *const module, const uint8_t source) 
 	uint8_t channel = samclk_get_peripheral_clockid(module);
 
 	CRITICAL_SECTION_ENTER();
-	#if defined(SAME54) || defined(SAME53)
+	#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 		GCLK->PCHCTRL[channel].reg = (source | GCLK_PCHCTRL_CHEN);
 	#elif defined SAMD20
 		GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(channel) | GCLK_CLKCTRL_GEN(source) | GCLK_CLKCTRL_CLKEN);
@@ -385,7 +401,7 @@ void samclk_enable_glck_slow_channel(const void *const module, const uint8_t slo
 	uint8_t slowchannel = samclk_get_peripheral_slowclockid(module);
 	
 	CRITICAL_SECTION_ENTER();
-	#if defined(SAME54) || defined(SAME53)
+	#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 		GCLK->PCHCTRL[slowchannel].reg = (slow_source | GCLK_PCHCTRL_CHEN);
 	#elif defined SAMD20
 		GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(slowchannel) | GCLK_CLKCTRL_GEN(slow_source) | GCLK_CLKCTRL_CLKEN);

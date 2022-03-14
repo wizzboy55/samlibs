@@ -10,7 +10,7 @@
 #include "sam_ports.h"
 
 // Serial Number
-#if defined(SAME53) || defined(SAME54)
+#if defined(SAME53) || defined(SAME54) || defined(SAMD51)
 	#define SN_WORD0_ADDR	0x008061FC
 	#define SN_WORD1_ADDR	0x00806010
 #elif defined(SAMD20)

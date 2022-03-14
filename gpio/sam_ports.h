@@ -10,7 +10,7 @@
 #define SAM_PORTS_H_
 
 // Reset Cause
-#if defined(SAME54) || defined(SAME53)
+#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 	#define RESETCAUSE_Type		RSTC_RCAUSE_Type
 	#define ResetCause			RSTC
 	#define ResetCause_WDT		RSTC_RCAUSE_WDT
@@ -33,7 +33,7 @@
 #endif
 
 // WatchDog
-#if defined(SAME54) || defined(SAME53)
+#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 	#define WDT_CTRLA			CTRLA
 #elif defined(SAMD20)
 	#define WDT_CTRLA			CTRL

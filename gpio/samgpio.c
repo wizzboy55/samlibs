@@ -168,7 +168,7 @@ inline uint8_t samgpio_getPinLevelFast(const GPIOPin_t gpio) {
 }
 
 PinMux_t samgpio_getModulePinmux(const void* module) {
-#if defined(SAME54) || defined(SAME53)
+#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 	switch((uint32_t)module) {
 		case (uint32_t)EIC:
 			return 0;
@@ -197,8 +197,10 @@ PinMux_t samgpio_getModulePinmux(const void* module) {
 			return 5;
 		case (uint32_t)CCL:
 			return 13;
+#if defined(SAME54) || defined(SAME53)
 		case (uint32_t)GMAC:
 			return 11;
+#endif
 		default:
 			return GPIO_PIN_FUNCTION_OFF;
 	}
