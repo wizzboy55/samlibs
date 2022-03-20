@@ -40,7 +40,7 @@ typedef struct {
 	UBaseType_t uxPriority;
 	QueueHandle_t xTransactionQueue;
 	UBaseType_t uxQueueLength;
-	I2CTransaction_t xCurrentTransaction;
+	I2CTransaction_t* pxCurrentTransaction;
 	TaskHandle_t xI2cTask;
 	I2CState_t xState;
 } I2CInterruptConfig_t;

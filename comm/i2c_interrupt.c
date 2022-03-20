@@ -45,7 +45,7 @@ void vI2cInterruptTask(void* p) {
 	
 	sercomdevice->I2CM.CTRLA.bit.MEXTTOEN = 1;
 	
-	sercomdevice->I2CM.CTRLA.bit.SDAHOLD = 1;
+	sercomdevice->I2CM.CTRLA.bit.SDAHOLD = 0;
 
 	sercomdevice->I2CM.BAUD.reg = (CONF_CPU_FREQUENCY / (2 * config->baudrate)) - 1;
 
@@ -59,9 +59,9 @@ void vI2cInterruptTask(void* p) {
 	sercomdevice->I2CM.CTRLA.bit.ENABLE = 1;
 	
 	for(;;) {		
-		if(xQueueReceive(config->xTransactionQueue, &(config->xCurrentTransaction), portMAX_DELAY)) {
+		if(xQueueReceive(config->xTransactionQueue, &(config->pxCurrentTransaction), portMAX_DELAY)) {
 			
-			config->xCurrentTransaction.xTransactionSuccess = pdFALSE;
+			config->pxCurrentTransaction->xTransactionSuccess = pdFALSE;
 			
 			sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 			sercomdevice->I2CM.STATUS.bit.BUSSTATE = 0x01;
@@ -70,7 +70,7 @@ void vI2cInterruptTask(void* p) {
 //				sercomdevice->I2CM.CTRLA.bit.ENABLE = 1;
 			}
 			uint8_t deviceAddress;
-			switch(config->xCurrentTransaction.xTransactionType) {
+			switch(config->pxCurrentTransaction->xTransactionType) {
 				case I2C_WRITE:
 					config->xState = I2C_WRITE_REGISTER;
 					break;
@@ -84,12 +84,12 @@ void vI2cInterruptTask(void* p) {
 			switch(config->xState) {
 				case I2C_WRITE_REGISTER:
 				case I2C_WRITE_DATA:
-					deviceAddress = config->xCurrentTransaction.ucDeviceAddress & ~I2C_READMASK;
+					deviceAddress = config->pxCurrentTransaction->ucDeviceAddress & ~I2C_READMASK;
 					sercomdevice->I2CM.INTENSET.bit.MB = 1;
 					sercomdevice->I2CM.INTENSET.bit.SB = 1;
 					break;
 				case I2C_READ_DATA:
-					deviceAddress = config->xCurrentTransaction.ucDeviceAddress | I2C_READMASK;
+					deviceAddress = config->pxCurrentTransaction->ucDeviceAddress | I2C_READMASK;
 					sercomdevice->I2CM.INTENSET.bit.SB = 1;
 					break;
 				default:
@@ -102,14 +102,14 @@ void vI2cInterruptTask(void* p) {
 			uint32_t driverNotification = 0;	
 			if(xTaskNotifyWait(0, 0, &driverNotification, config->xTimeout)) {
 				if(driverNotification != I2cmError_None) {
-					config->xCurrentTransaction.xTransactionSuccess = pdFALSE;
+					config->pxCurrentTransaction->xTransactionSuccess = pdFALSE;
 				} else {
-					config->xCurrentTransaction.xTransactionSuccess = pdTRUE;
+					config->pxCurrentTransaction->xTransactionSuccess = pdTRUE;
 				}
 			} else {
-				config->xCurrentTransaction.xTransactionSuccess = pdFALSE;
+				config->pxCurrentTransaction->xTransactionSuccess = pdFALSE;
 			}
-			xTaskNotify(config->xCurrentTransaction.xRequestingTask, 0, eNoAction);
+			xTaskNotify(config->pxCurrentTransaction->xRequestingTask, 0, eNoAction);
 		}
 	}
 }
@@ -117,7 +117,7 @@ void vI2cInterruptTask(void* p) {
 void vI2cInterruptInit(I2CInterruptConfig_t* config) {
 	xTaskCreate(vI2cInterruptTask, "I2C", I2C_STACK_SIZE, config, config->uxPriority, NULL);
 	
-	config->xTransactionQueue = xQueueCreate(config->uxQueueLength, sizeof(I2CTransaction_t));
+	config->xTransactionQueue = xQueueCreate(config->uxQueueLength, sizeof(I2CTransaction_t*));
 }
 
 void vI2cInterruptMBRoutine(I2CInterruptConfig_t* config) {
@@ -143,20 +143,20 @@ void vI2cInterruptMBRoutine(I2CInterruptConfig_t* config) {
 
 	switch(config->xState) {
 		case I2C_WRITE_REGISTER:
-			sercomdevice->I2CM.DATA.bit.DATA = config->xCurrentTransaction.ucRegisterAddress;
-			config->xCurrentTransaction.ucDataCounter = 0;
-			if(config->xCurrentTransaction.xTransactionType == I2C_WRITE) {
+			sercomdevice->I2CM.DATA.bit.DATA = config->pxCurrentTransaction->ucRegisterAddress;
+			config->pxCurrentTransaction->ucDataCounter = 0;
+			if(config->pxCurrentTransaction->xTransactionType == I2C_WRITE) {
 				config->xState = I2C_WRITE_DATA;
-			} else if (config->xCurrentTransaction.xTransactionType == I2C_WRITEREAD) {
+			} else if (config->pxCurrentTransaction->xTransactionType == I2C_WRITEREAD) {
 				config->xState = I2C_READ_DATA;
 			}
 			break;
 		case I2C_READ_DATA:
-			sercomdevice->I2CM.ADDR.reg = config->xCurrentTransaction.ucDeviceAddress | I2C_READMASK;
+			sercomdevice->I2CM.ADDR.reg = config->pxCurrentTransaction->ucDeviceAddress | I2C_READMASK;
 			break;
 		case I2C_WRITE_DATA:
-			if(config->xCurrentTransaction.ucDataCounter < config->xCurrentTransaction.ucDataLength) {
-				sercomdevice->I2CM.DATA.bit.DATA = config->xCurrentTransaction.pcData[config->xCurrentTransaction.ucDataCounter++];
+			if(config->pxCurrentTransaction->ucDataCounter < config->pxCurrentTransaction->ucDataLength) {
+				sercomdevice->I2CM.DATA.bit.DATA = config->pxCurrentTransaction->pcData[config->pxCurrentTransaction->ucDataCounter++];
 			} else {
 				xTaskNotifyFromISR(config->xI2cTask, I2cmError_None, eSetBits, NULL);
 			}
@@ -172,8 +172,8 @@ void vI2cInterruptSBRoutine(I2CInterruptConfig_t* config) {
 	
 	sercomdevice->I2CM.INTFLAG.bit.SB = 1;
 	
-	config->xCurrentTransaction.pcData[config->xCurrentTransaction.ucDataCounter++] = (uint8_t)sercomdevice->I2CM.DATA.bit.DATA;
-	if(config->xCurrentTransaction.ucDataCounter < config->xCurrentTransaction.ucDataLength) {
+	config->pxCurrentTransaction->pcData[config->pxCurrentTransaction->ucDataCounter++] = (uint8_t)sercomdevice->I2CM.DATA.bit.DATA;
+	if(config->pxCurrentTransaction->ucDataCounter < config->pxCurrentTransaction->ucDataLength) {
 		sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 		sercomdevice->I2CM.CTRLB.bit.CMD = I2cmCmd_AckRead;
 	} else {
