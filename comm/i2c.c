@@ -69,7 +69,7 @@ uint8_t i2c_master_readByte(i2cConfig_t* config, uint8_t device) {
 	TickType_t timeoutTick = xTaskGetTickCount();
 	
 	while(sercomdevice->I2CM.STATUS.bit.BUSSTATE != 0x01) {
-		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+		if(xTaskGetTickCount() > timeoutTick + (config->xTimeout / portTICK_PERIOD_MS)) {
 			return pdFALSE;
 		}
 	}
@@ -79,7 +79,7 @@ uint8_t i2c_master_readByte(i2cConfig_t* config, uint8_t device) {
 	timeoutTick = xTaskGetTickCount();
 
 	while(sercomdevice->I2CM.INTFLAG.bit.SB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
-		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+		if(xTaskGetTickCount() > timeoutTick + (config->xTimeout / portTICK_PERIOD_MS)) {
 			return pdFALSE;
 		}
 	}
@@ -174,7 +174,7 @@ uint8_t i2c_master_writeAddr_LE(i2cConfig_t* config, uint8_t device, uint8_t add
 	TickType_t timeoutTick = xTaskGetTickCount();
 
 	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
-		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+		if(xTaskGetTickCount() > timeoutTick + (config->xTimeout / portTICK_PERIOD_MS)) {
 			return pdFALSE;
 		}
 	}
@@ -184,7 +184,7 @@ uint8_t i2c_master_writeAddr_LE(i2cConfig_t* config, uint8_t device, uint8_t add
 	timeoutTick = xTaskGetTickCount();
 
 	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
-		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+		if(xTaskGetTickCount() > timeoutTick + (config->xTimeout / portTICK_PERIOD_MS)) {
 			return pdFALSE;
 		}
 	}
@@ -207,7 +207,7 @@ uint8_t i2c_master_writeAddr16_LE(i2cConfig_t* config, uint8_t device, uint16_t 
 	TickType_t timeoutTick = xTaskGetTickCount();
 
 	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
-		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+		if(xTaskGetTickCount() > timeoutTick + (config->xTimeout / portTICK_PERIOD_MS)) {
 			return pdFALSE;
 		}
 	}
@@ -217,7 +217,7 @@ uint8_t i2c_master_writeAddr16_LE(i2cConfig_t* config, uint8_t device, uint16_t 
 	timeoutTick = xTaskGetTickCount();
 	
 	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
-		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+		if(xTaskGetTickCount() > timeoutTick + (config->xTimeout / portTICK_PERIOD_MS)) {
 			return pdFALSE;
 		}
 	}
@@ -227,7 +227,7 @@ uint8_t i2c_master_writeAddr16_LE(i2cConfig_t* config, uint8_t device, uint16_t 
 	timeoutTick = xTaskGetTickCount();
 
 	while(sercomdevice->I2CM.INTFLAG.bit.MB != 1 && sercomdevice->I2CM.STATUS.bit.CLKHOLD != 1) {
-		if(xTaskGetTickCount() > timeoutTick + (config->timeout / portTICK_PERIOD_MS)) {
+		if(xTaskGetTickCount() > timeoutTick + (config->xTimeout / portTICK_PERIOD_MS)) {
 			return pdFALSE;
 		}
 	}

@@ -21,7 +21,7 @@ typedef struct {
 	uint8_t pin_scl;
 	uint8_t pinmux;
 	uint8_t clksource;
-	uint16_t timeout;
+	uint16_t xTimeout;
 } i2cConfig_t;
 
 void i2c_master_initIF(i2cConfig_t* config);
