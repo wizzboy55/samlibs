@@ -26,5 +26,8 @@ void sam_enableModuleInterrupt(void* const module);
 void sam_disableModuleInterrupt(void* const module);
 void sam_clearPendingModuleInterrupt(void* const module);
 void sam_setModuleInterruptPriority(void* const module, InterruptPriority_t priority);
+void sam_setModuleSubInterruptPriority(void* const module, uint8_t offset, InterruptPriority_t priority);
+void sam_enableModuleSubInterrupt(void* const module, uint8_t offset);
+void sam_disableModuleSubInterrupt(void* const module, uint8_t offset);
 
 #endif /* SAMINTERRUPT_H_ */

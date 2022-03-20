@@ -10,7 +10,7 @@
 
 IRQn_Type sam_getModuleInterrupt(void* const module) {
 	uint32_t addr = (uint32_t)module;
-	#if defined(SAME54) || defined(SAME53)
+	#if defined(SAME54) || defined(SAME53) || defined(SAMD51)
 		switch(addr) {
 			case (uint32_t)SERCOM0:
 				return SERCOM0_0_IRQn;
@@ -80,8 +80,16 @@ void sam_enableModuleInterrupt(void* const module) {
 	NVIC_EnableIRQ(sam_getModuleInterrupt(module));
 }
 
+void sam_enableModuleSubInterrupt(void* const module, uint8_t offset) {
+	NVIC_EnableIRQ(sam_getModuleInterrupt(module) + offset);
+}
+
 void sam_disableModuleInterrupt(void* const module) {
 	NVIC_DisableIRQ(sam_getModuleInterrupt(module));
+}
+
+void sam_disableModuleSubInterrupt(void* const module, uint8_t offset) {
+	NVIC_DisableIRQ(sam_getModuleInterrupt(module) + offset);
 }
 
 void sam_clearPendingModuleInterrupt(void* const module) {
@@ -90,4 +98,8 @@ void sam_clearPendingModuleInterrupt(void* const module) {
 
 void sam_setModuleInterruptPriority(void* const module, InterruptPriority_t priority) {
 	NVIC_SetPriority(sam_getModuleInterrupt(module), (uint32_t)priority);
+}
+
+void sam_setModuleSubInterruptPriority(void* const module, uint8_t offset, InterruptPriority_t priority) {
+	NVIC_SetPriority(sam_getModuleInterrupt(module) + offset, (uint32_t)priority);
 }
