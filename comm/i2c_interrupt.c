@@ -56,6 +56,11 @@ void vI2cInterruptTask(void* p) {
 	
 	config->xState = I2C_IDLE;
 	
+	sam_setModuleSubInterruptPriority(config->sercom, SERCOM_I2CM_INTFLAG_MB_Pos, config->ucInterruptPriority);
+	sam_setModuleSubInterruptPriority(config->sercom, SERCOM_I2CM_INTFLAG_SB_Pos, config->ucInterruptPriority);
+	sam_setModuleSubInterruptPriority(config->sercom, 2, config->ucInterruptPriority);
+	sam_setModuleSubInterruptPriority(config->sercom, 3, config->ucInterruptPriority);
+	
 	sercomdevice->I2CM.CTRLA.bit.ENABLE = 1;
 	
 	for(;;) {		

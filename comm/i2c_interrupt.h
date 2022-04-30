@@ -44,6 +44,7 @@ typedef struct {
 	I2CTransaction_t* pxCurrentTransaction;
 	TaskHandle_t xI2cTask;
 	I2CState_t xState;
+	uint8_t ucInterruptPriority;
 } I2CInterruptConfig_t;
 
 void vI2cInterruptInit(I2CInterruptConfig_t* config);
