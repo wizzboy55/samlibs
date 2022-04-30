@@ -172,7 +172,13 @@ void vI2cInterruptSBRoutine(I2CInterruptConfig_t* config) {
 	
 	sercomdevice->I2CM.INTFLAG.bit.SB = 1;
 	
-	config->pxCurrentTransaction->pcData[config->pxCurrentTransaction->ucDataCounter++] = (uint8_t)sercomdevice->I2CM.DATA.bit.DATA;
+	if(config->pxCurrentTransaction->xBigEndian == pdTRUE) {
+		config->pxCurrentTransaction->ucDataCounter++;
+		config->pxCurrentTransaction->pcData[config->pxCurrentTransaction->ucDataLength - (config->pxCurrentTransaction->ucDataCounter)] = (uint8_t)sercomdevice->I2CM.DATA.bit.DATA;
+	} else {
+		config->pxCurrentTransaction->pcData[config->pxCurrentTransaction->ucDataCounter++] = (uint8_t)sercomdevice->I2CM.DATA.bit.DATA;
+	}
+	
 	if(config->pxCurrentTransaction->ucDataCounter < config->pxCurrentTransaction->ucDataLength) {
 		sercomdevice->I2CM.CTRLB.bit.ACKACT = 0;
 		sercomdevice->I2CM.CTRLB.bit.CMD = I2cmCmd_AckRead;

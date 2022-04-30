@@ -26,6 +26,7 @@ typedef struct {
 	I2CTransactionType_t xTransactionType;
 	BaseType_t xTransactionSuccess;
 	TaskHandle_t xRequestingTask;
+	BaseType_t xBigEndian;
 } I2CTransaction_t;
 
 typedef struct {
