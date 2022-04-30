@@ -239,10 +239,6 @@ void UsageFault_Handler(void) {
 	for(;;) {}
 }
 
-void SVCall_Handler(void) {
-	for(;;) {}
-}
-
 void DebugMonitor_Handler(void) {
 	for(;;) {}
 }
