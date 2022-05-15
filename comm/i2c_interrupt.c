@@ -105,7 +105,7 @@ void vI2cInterruptTask(void* p) {
 			sam_enableModuleSubInterrupt(config->sercom, SERCOM_I2CM_INTFLAG_SB_Pos);
 			sercomdevice->I2CM.ADDR.reg = deviceAddress;
 			uint32_t driverNotification = 0;	
-			if(xTaskNotifyWait(0, 0, &driverNotification, config->xTimeout)) {
+			if(xTaskNotifyWait(0xFFFFFFFF, 0, &driverNotification, config->xTimeout)) {
 				if(driverNotification != I2cmError_None) {
 					config->pxCurrentTransaction->xTransactionSuccess = pdFALSE;
 				} else {
@@ -131,17 +131,17 @@ void vI2cInterruptMBRoutine(I2CInterruptConfig_t* config) {
 	sercomdevice->I2CM.INTFLAG.bit.MB = 1;
 	
 	if(sercomdevice->I2CM.STATUS.bit.BUSERR) {
-		xTaskNotifyFromISR(config->xI2cTask, I2cmError_BusError, eSetBits, NULL);
+		xTaskNotifyFromISR(config->xI2cTask, I2cmError_BusError, eSetValueWithOverwrite, NULL);
 		sercomdevice->I2CM.CTRLB.bit.CMD = I2cmCmd_AckStop;
 		return;
 	}
 	if(sercomdevice->I2CM.STATUS.bit.ARBLOST) {
-		xTaskNotifyFromISR(config->xI2cTask, I2cmError_ArbLost, eSetBits, NULL);
+		xTaskNotifyFromISR(config->xI2cTask, I2cmError_ArbLost, eSetValueWithOverwrite, NULL);
 		sercomdevice->I2CM.CTRLB.bit.CMD = I2cmCmd_AckStop;
 		return;
 	}
 	if(sercomdevice->I2CM.STATUS.bit.RXNACK) {
-		xTaskNotifyFromISR(config->xI2cTask, I2cmError_NoSlave, eSetBits, NULL);
+		xTaskNotifyFromISR(config->xI2cTask, I2cmError_NoSlave, eSetValueWithOverwrite, NULL);
 		sercomdevice->I2CM.CTRLB.bit.CMD = I2cmCmd_AckStop;
 		return;
 	}
@@ -163,7 +163,7 @@ void vI2cInterruptMBRoutine(I2CInterruptConfig_t* config) {
 			if(config->pxCurrentTransaction->ucDataCounter < config->pxCurrentTransaction->ucDataLength) {
 				sercomdevice->I2CM.DATA.bit.DATA = config->pxCurrentTransaction->pcData[config->pxCurrentTransaction->ucDataCounter++];
 			} else {
-				xTaskNotifyFromISR(config->xI2cTask, I2cmError_None, eSetBits, NULL);
+				xTaskNotifyFromISR(config->xI2cTask, I2cmError_None, eSetValueWithOverwrite, NULL);
 			}
 			break;
 		default:
