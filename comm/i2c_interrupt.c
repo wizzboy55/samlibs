@@ -125,6 +125,18 @@ void vI2cInterruptInit(I2CInterruptConfig_t* config) {
 	config->xTransactionQueue = xQueueCreate(config->uxQueueLength, sizeof(I2CTransaction_t*));
 }
 
+void vI2CInterruptDisable(I2CInterruptConfig_t* config) {
+	Sercom* sercomdevice = (Sercom*)config->sercom;
+	
+	sercomdevice->I2CM.CTRLA.bit.ENABLE = 0;
+}
+
+void vI2CInterruptEnable(I2CInterruptConfig_t* config) {
+	Sercom* sercomdevice = (Sercom*)config->sercom;
+	
+	sercomdevice->I2CM.CTRLA.bit.ENABLE = 1;
+}
+
 void vI2cInterruptMBRoutine(I2CInterruptConfig_t* config) {
 	Sercom* sercomdevice = (Sercom*)config->sercom;
 	

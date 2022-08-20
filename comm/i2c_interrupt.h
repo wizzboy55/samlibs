@@ -51,5 +51,7 @@ void vI2cInterruptInit(I2CInterruptConfig_t* config);
 void vI2cInterruptMBRoutine(I2CInterruptConfig_t* config);
 void vI2cInterruptSBRoutine(I2CInterruptConfig_t* config);
 void vI2cInterruptErrorRoutine(I2CInterruptConfig_t* config);
+void vI2CInterruptDisable(I2CInterruptConfig_t* config);
+void vI2CInterruptEnable(I2CInterruptConfig_t* config);
 
 #endif /* I2C_INTERRUPT_H_ */
